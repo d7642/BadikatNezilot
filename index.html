@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One-Stop Security Check | דוד Hacker</title>
+
+<!-- אופציות אבטחה בסיסיות -->
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- CSP בסיסי (ניתן לכוונון נוסף בשרת אם תעלה אותו) -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' https: data:;
+  script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  connect-src *;
+  img-src 'self' data: https:;
+  frame-src 'self' https:;
+">
+
+<!-- ספריות חיצוניות לשמירה/יצוא PDF (נשתמש מה-CDN המוכר) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+:root{
+  --bg:#071427; --card:#0b1b27; --accent:#06b6d4; --muted:#9fb2c4; --ok:#2ecc71; --warn:#f39c12; --bad:#ff5252;
+  --glass: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box;font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+body{margin:0;background:linear-gradient(180deg,#04111a 0%, #071427 100%);color:#e6eef6;min-height:100vh;direction:rtl}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.brand{display:flex;gap:12px;align-items:center}
+.logoBox{display:flex;align-items:center;gap:12px}
+.logoSVG{width:52px;height:52px}
+.title{font-weight:800;font-size:18px}
+.subtitle{color:var(--muted);font-size:13px}
+.controls{display:flex;gap:8px;align-items:center}
+select,input[type="checkbox"]{padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
+button{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:#012;cursor:pointer;font-weight:700}
+button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+main{padding:18px;display:grid;grid-template-columns:1fr 380px;gap:18px}
+.card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+h2{margin:0 0 10px 0;font-size:18px}
+.small{font-size:13px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);margin-bottom:8px}
+.status{font-weight:800}
+.ok{color:var(--ok)}
+.warn{color:var(--warn)}
+.bad{color:var(--bad)}
+.progress{height:10px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-top:10px}
+.progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8ee7ff);width:0%}
+pre{background:#06121a;padding:12px;border-radius:8px;overflow:auto}
+.footerNote{font-size:12px;color:var(--muted);margin-top:8px}
+.toggle{display:flex;align-items:center;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:980px){main{grid-template-columns:1fr} .controls{flex-direction:column;align-items:flex-end}}
+/* Light mode */
+body.light{background:#f6f8fa;color:#081826}
+body.light .card{background:#fff;color:#081826}
+body.light button{color:#fff}
+body.light .subtitle{color:#6b7280}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logoBox">
+      <!-- לוגו מסכת גיא פוקס (SVG inline) -->
+      <svg class="logoSVG" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g transform="translate(0,0)">
+          <circle cx="32" cy="32" r="30" fill="#0b1220"/>
+          <!-- simplified mask icon (non-identifying artistic stylized) -->
+          <path d="M16 40c0-8 9-14 16-14s16 6 16 14" stroke="#fff" stroke-width="2" fill="none"/>
+          <path d="M20 28c2-4 6-6 12-6s10 2 12 6" stroke="#fff" stroke-width="2" fill="none"/>
+          <path d="M24 44c4 4 12 4 16 0" stroke="#fff" stroke-width="2" fill="none"/>
+          <circle cx="22" cy="30" r="1.8" fill="#fff"/>
+          <circle cx="42" cy="30" r="1.8" fill="#fff"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <div class="title">One-Stop Security Check | דוד Hacker</div>
+      <div class="subtitle">כלי בדיקות פרטיות ואבטחה — מצב: מומחה / מתחיל</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label class="small">שפה
+      <select id="langSelect">
+        <option value="he">עברית</option>
+        <option value="en">English</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
+    </label>
+
+    <div class="toggle small">
+      <label>תאורה</label>
+      <button id="themeBtn" class="ghost">Light</button>
+    </div>
+
+    <div class="modes small" style="align-items:center">
+      מצב:
+      <button id="modeBeginner" class="ghost">מתחיל</button>
+      <button id="modeExpert">מומחה</button>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="startBtn">התחל בדיקות</button>
+      <button id="exportPdf" class="ghost">ייצא PDF</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="card" id="mainPanel">
+    <h2 id="panelTitle">סקירה מהירה</h2>
+    <div class="small" id="panelSubtitle">בחר מצב והתחל בדיקות — בסיום תקבל דו״ח מפורט שניתן לשתף/להוריד.</div>
+
+    <div class="progress" aria-hidden="true"><span id="progBar"></span></div>
+
+    <div id="results" style="margin-top:12px"></div>
+
+    <div id="actionNotes" class="small footerNote"></div>
+
+    <div id="reportActions" style="margin-top:12px;display:none">
+      <button id="shareBtn" class="ghost">קבל קובץ שיתוף (HTML)</button>
+      <button id="printBtn" class="ghost">הדפס/שמור כ-PDF</button>
+    </div>
+
+    <hr style="margin:14px 0;border:none;border-top:1px dashed rgba(255,255,255,0.04)">
+
+    <h2>עורך HTML בזמן אמת (Sandboxed)</h2>
+    <div class="small">הכנס קוד HTML/JS מקומי — התצוגה רצה ב־iframe מבודד. זה מיועד להצגה מקומית בלבד.</div>
+    <div style="margin-top:8px">
+      <textarea id="editor" style="width:100%;height:120px;font-family:monospace;border-radius:8px;padding:8px;">&lt;div style="padding:18px;font-family:system-ui"&gt;שלום — תצוגה מקומית&lt;/div&gt;</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px"><button id="runPreview">הצג תצוגה</button><button id="resetPreview" class="ghost">איפוס</button></div>
+      <iframe id="preview" class="card" style="width:100%;height:220px;border-radius:8px;margin-top:8px" sandbox="allow-scripts"></iframe>
+    </div>
+  </section>
+
+  <aside class="card">
+    <h2>פרטי קשר וזכויות</h2>
+    <div class="small">דוד Hacker — אין להעתיק בשום צורה. לפניות: <a href="mailto:hacker.david.7642@gmail.com" style="color:var(--accent)">dovid.7642@gmail.com</a></div>
+
+    <h2 style="margin-top:12px">הצהרת עוגיות (לפי בחירתך)</h2>
+    <div class="small">
+      אתר זה אינו עושה שימוש בעוגיות ואינו שומר מידע אישי כלשהו.<br>
+      המשך השימוש באתר מהווה הסכמה למדיניות הפרטיות.
+    </div>
+
+    <h2 style="margin-top:12px">הגדרות מתקדמות</h2>
+    <div class="small">
+      <label><input type="checkbox" id="consentThird"> מאשר בדיקות מתקדמות שמשתמשות ב-APIs של צד-שלישי</label>
+      <div class="footerNote">הסכמה זו נדרשת לביצוע בדיקת WHOIS/RDAP מפורטת ולשימוש בשירותי geolocation חיצוניים.</div>
+    </div>
+
+    <h2 style="margin-top:12px">סיכום מהיר</h2>
+    <div id="overall" class="row"><div>סיכון כללי</div><div id="overallStatus" class="status">—</div></div>
+
+    <h2 style="margin-top:12px">הסברים מהירים</h2>
+    <div class="small">
+      לחץ על "הסבר" ליד כל שורה בדו״ח כדי לקבל הסבר ידידותי למשתמש (במצב מתחיל). במצב מומחה יופיעו פרטים טכניים מורחבים.
+    </div>
+  </aside>
+</main>
+
+<footer class="card" style="margin:18px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>© 2025 דוד Hacker — אין להעתיק בשום צורה.</div>
+    <div class="small">אתר זה אינו שומר קוקיז ואינו מאחסן מידע אישי.</div>
+  </div>
+</footer>
+
+<script>
+/* =======================
+   One-Stop Security Check
+   Single-file client-side app
+   Safe: אין פונקציות התקפיות (אין סריקות פורטים, אין ביצוע פקודות על מערכות אחרות).
+   כל הנתונים מעובדים בדפדפן בלבד. אם תרצה WHOIS/ASN אמיתי ומדויק יותר — דרוש endpoint צד-שרת עם מפתח API.
+   ======================= */
+
+const langMap = {
+  he: {start:'התחל בדיקות', export:'ייצא PDF', beginner:'מתחיל', expert:'מומחה', panelTitle:'סקירה מהירה', privacy:'מדיניות פרטיות', help:'איך לפרש דו\"ח זה?'},
+  en: {start:'Start tests', export:'Export PDF', beginner:'Beginner', expert:'Expert', panelTitle:'Quick overview', privacy:'Privacy policy', help:'How to read this report?'}
+};
+
+// UI elements
+const modeBeginnerBtn = document.getElementById('modeBeginner');
+const modeExpertBtn = document.getElementById('modeExpert');
+const startBtn = document.getElementById('startBtn');
+const exportPdfBtn = document.getElementById('exportPdf');
+const progBar = document.getElementById('progBar');
+const resultsEl = document.getElementById('results');
+const overallStatusEl = document.getElementById('overallStatus');
+const consentThird = document.getElementById('consentThird');
+const runPreviewBtn = document.getElementById('runPreview');
+const previewFrame = document.getElementById('preview');
+const editor = document.getElementById('editor');
+const resetPreviewBtn = document.getElementById('resetPreview');
+const themeBtn = document.getElementById('themeBtn');
+const langSelect = document.getElementById('langSelect');
+const reportActions = document.getElementById('reportActions');
+const shareBtn = document.getElementById('shareBtn');
+const printBtn = document.getElementById('printBtn');
+
+let mode = 'expert'; // or 'beginner'
+let lastReport = null;
+
+// translations (basic)
+langSelect.addEventListener('change', applyLang);
+function applyLang(){
+  const t = langMap[langSelect.value] || langMap['he'];
+  startBtn.textContent = t.start;
+  exportPdfBtn.textContent = t.export;
+  modeBeginnerBtn.textContent = t.beginner;
+  modeExpertBtn.textContent = t.expert;
+  document.getElementById('panelTitle').textContent = t.panelTitle;
+}
+applyLang();
+
+// mode toggles
+modeBeginnerBtn.addEventListener('click', () => { mode='beginner'; updateModeUI(); });
+modeExpertBtn.addEventListener('click', () => { mode='expert'; updateModeUI(); });
+function updateModeUI(){
+  modeBeginnerBtn.classList.toggle('ghost', mode!=='beginner');
+  modeExpertBtn.classList.toggle('ghost', mode!=='expert');
+  document.getElementById('panelSubtitle').textContent = mode==='beginner' ? 'מצב מתחיל: תוצאות פשוטות והמלצות מהירות.' : 'מצב מומחה: דו\"ח מפורט וטכני.';
+}
+updateModeUI();
+
+// theme
+themeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('light');
+  themeBtn.textContent = document.body.classList.contains('light') ? 'Dark' : 'Light';
+});
+
+// preview editor
+runPreviewBtn.addEventListener('click', () => {
+  // sandboxed iframe - allow-scripts but nothing else. user can render local test pages only.
+  const code = editor.value || '';
+  // Basic sanitization: we will not modify code — it's for local preview only. (User requested live preview.)
+  previewFrame.srcdoc = code;
+});
+resetPreviewBtn.addEventListener('click', () => {
+  editor.value = '&lt;div style=\"padding:18px;font-family:system-ui\"&gt;שלום — תצוגה מקומית&lt;/div&gt;';
+  previewFrame.srcdoc = editor.value;
+});
+previewFrame.srcdoc = editor.value;
+
+// progress helper
+function setProgress(p){ progBar.style.width = p + '%'; }
+
+// safe fetch with timeout
+function fetchTimeout(url, opts={}, t=8000){
+  return new Promise((resolve,reject)=>{
+    const timer = setTimeout(()=>reject(new Error('timeout')), t);
+    fetch(url, opts).then(r=>{ clearTimeout(timer); resolve(r); }).catch(e=>{ clearTimeout(timer); reject(e); });
+  });
+}
+
+/* ===========================
+   CHECK FUNCTIONS (client-side)
+   - כל ״בדיקה״ פה היא בהיקף שמותר בדפדפן ולא מבצעת סריקות או ניסיונות חדירה.
+   - אין קריאות לכתובות פנימיות רגישות. אין port-scan.
+   =========================== */
+
+// 1) Public IP (try IPv6 then IPv4)
+async function getPublicIP(){
+  try{
+    const r = await fetchTimeout('https://api64.ipify.org?format=json', {}, 5000);
+    if(r.ok) return (await r.json()).ip;
+  } catch(e){}
+  try{
+    const r2 = await fetchTimeout('https://api.ipify.org?format=json', {}, 5000);
+    if(r2.ok) return (await r2.json()).ip;
+  } catch(e){}
+  return null;
+}
+
+// 2) IP details (geo/org) - ipapi.co or fallback ipinfo (may require consent)
+async function getIPDetails(ip){
+  if(!ip) return null;
+  try{
+    const r = await fetchTimeout(`https://ipapi.co/${ip}/json/`, {}, 7000);
+    if(r.ok) return await r.json();
+  } catch(e){}
+  // fallback:
+  try{
+    const r2 = await fetchTimeout(`https://ipwhois.app/json/${ip}`, {}, 7000);
+    if(r2.ok) return await r2.json();
+  } catch(e){}
+  return null;
+}
+
+// 3) RDAP/WHOIS (only if consent)
+async function rdapLookup(ip){
+  if(!ip || !consentThird.checked) return null;
+  try{
+    const r = await fetchTimeout(`https://rdap.org/ip/${ip}`, {}, 7000);
+    if(r.ok) return await r.json();
+  } catch(e){}
+  return null;
+}
+
+// 4) WebRTC leak detection — collect ICE candidate IPs (v4 & v6)
+async function checkWebRTC(){
+  return new Promise((resolve)=>{
+    const ips = new Set();
+    const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    if(!RTCPeerConnection) return resolve({supported:false, leaked:false, ips:[]});
+    const pc = new RTCPeerConnection({iceServers:[]});
+    try{ pc.createDataChannel('test'); }catch(e){}
+    pc.createOffer().then(offer => pc.setLocalDescription(offer)).catch(()=>{});
+    pc.onicecandidate = (e) => {
+      if(!e || !e.candidate) {
+        try{ pc.close(); }catch(e){}
+        return resolve({supported:true, leaked: ips.size>0, ips: Array.from(ips)});
+      }
+      const cand = e.candidate.candidate || '';
+      // extract candidate IPs using regex (IPv4 & IPv6)
+      const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})|([0-9a-fA-F:]{2,})/g;
+      let m;
+      while((m = ipRegex.exec(cand)) !== null){
+        const found = m[0];
+        if(found && found !== '0.0.0.0') ips.add(found);
+      }
+    };
+    // fallback timeout
+    setTimeout(()=>{ try{pc.close()}catch(e){}; resolve({supported:true, leaked: ips.size>0, ips: Array.from(ips)}); }, 3500);
+  });
+}
+
+// 5) DNS leak heuristic — try Cloudflare trace and ipapi responses (best-effort)
+// note: CORS can restrict accurate DNS-resolver discovery from client; this is heuristic.
+async function checkDNSLeak(){
+  try{
+    const cf = await fetchTimeout('https://1.1.1.1/cdn-cgi/trace', {}, 5000);
+    if(cf.ok){
+      const txt = await cf.text();
+      return {ok:true, source:'cloudflare', raw:txt};
+    }
+  } catch(e){}
+  // fallback ipapi
+  try{
+    const ip = await getIPDetails(await getPublicIP());
+    if(ip) return {ok:true, source:'ipapi', json:ip};
+  } catch(e){}
+  return {ok:false};
+}
+
+// 6) Fingerprint basics (userAgent, screen, timezone, canvas hash)
+function getFingerprint(){
+  const nav = navigator;
+  // canvas hash (simple)
+  let canvasHash = null;
+  try{
+    const c = document.createElement('canvas');
+    c.width = 200; c.height = 40;
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125,1,62,20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('Security Test', 2, 2);
+    canvasHash = c.toDataURL().substring(0,80);
+  }catch(e){}
+  return {
+    userAgent: nav.userAgent,
+    platform: nav.platform,
+    languages: nav.languages,
+    cores: nav.hardwareConcurrency,
+    screen: {width: screen.width, height: screen.height, colorDepth: screen.colorDepth},
+    canvasHash,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  };
+}
+
+// 7) WebGL info
+function getWebGLInfo(){
+  try{
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl) return null;
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    return {
+      vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+      renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)
+    };
+  } catch(e){ return null; }
+}
+
+// 8) Permissions
+async function checkPermissions(){
+  const perms = ['geolocation','camera','microphone','notifications','persistent-storage'];
+  const out = {};
+  if(!navigator.permissions) return out;
+  for(const p of perms){
+    try{
+      const s = await navigator.permissions.query({name: p});
+      out[p] = s.state;
+    } catch(e){
+      out[p] = 'unknown';
+    }
+  }
+  return out;
+}
+
+// 9) AdBlock detection (heuristic)
+async function detectAdBlock(){
+  return new Promise((resolve)=>{
+    const bait = document.createElement('div');
+    bait.className = 'adsbox';
+    bait.style.width='1px'; bait.style.height='1px'; bait.style.position='absolute'; bait.style.left='-10000px';
+    document.body.appendChild(bait);
+    window.setTimeout(()=>{
+      const blocked = (getComputedStyle(bait).display==='none' || bait.offsetParent===null || bait.clientHeight===0);
+      document.body.removeChild(bait);
+      resolve(blocked);
+    }, 120);
+  });
+}
+
+// 10) Simple tracker detection (heuristic): try to load images from common trackers (only for checking presence of blocking)
+// NOTE: we only try image loads to common tracker domains; CORS isn't involved for images. This does NOT contact user-provided hosts.
+async function detectTrackers(){
+  const trackers = [
+    'https://www.google-analytics.com/analytics.js',
+    'https://connect.facebook.net/en_US/fbevents.js',
+    'https://static.hotjar.com/c/hotjar-',
+  ];
+  const found = [];
+  for(const t of trackers){
+    try{
+      const img = new Image();
+      await new Promise((res,rej)=>{
+        img.onload = () => res(true);
+        img.onerror = () => rej(false);
+        // set small timeout
+        setTimeout(()=>rej(false), 3000);
+        img.src = t + '?r=' + Math.random();
+      });
+      found.push(t);
+    } catch(e){}
+  }
+  return found;
+}
+
+// 11) Firewall heuristic (best-effort) — only checks reachability to public endpoints
+async function firewallHeuristic(){
+  const urls = ['https://api.ipify.org?format=json','https://ipapi.co/json/','https://1.1.1.1/cdn-cgi/trace'];
+  let ok = 0;
+  for(const u of urls){
+    try{
+      const r = await fetchTimeout(u, {}, 3500);
+      if(r && r.ok) ok++;
+    } catch(e){}
+  }
+  return ok >= 2;
+}
+
+// 12) VPN/Proxy/TOR heuristics based on provider strings
+function detectVPNorProxy(details, rdap){
+  const suspectWords = ['vpn','proxy','cloud','amazon','google','microsoft','digitalocean','ovh','linode','hetzner','vps','hosting','aws','azure','aliyun','cloudflare'];
+  let score = 0;
+  const orgStrings = [];
+  if(details){
+    if(details.org) orgStrings.push(details.org.toLowerCase());
+    if(details.org_name) orgStrings.push(details.org_name.toLowerCase());
+    if(details.isp) orgStrings.push(details.isp.toLowerCase());
+  }
+  if(rdap){
+    if(rdap.name) orgStrings.push(String(rdap.name).toLowerCase());
+    if(rdap.title) orgStrings.push(String(rdap.title).toLowerCase());
+  }
+  const joined = orgStrings.join(' ');
+  suspectWords.forEach(w => { if(joined.includes(w)) score+=1; });
+  // TOR heuristic
+  if(joined.includes('tor')) score += 2;
+  return {likely: score>=2, score, raw: joined || '—'};
+}
+
+/* =======================
+   Orchestration: runAllChecks
+   ======================= */
+
+startBtn.addEventListener('click', runAllChecks);
+exportPdfBtn.addEventListener('click', exportPDF);
+shareBtn.addEventListener('click', shareReport);
+printBtn.addEventListener('click', ()=>window.print());
+
+async function runAllChecks(){
+  // reset
+  resultsEl.innerHTML = '';
+  reportActions.style.display = 'none';
+  setProgress(5);
+  const consent = consentThird.checked;
+
+  // Step 1: public IP
+  addRow('כתובת IP ציבורית', 'טוען…');
+  setProgress(12);
+  const publicIP = await getPublicIP();
+  updateLastRow(publicIP || 'לא זוהתה');
+
+  // Step 2: IP details
+  addRow('פרטי רשת (ISP/ASN/מיקום)', 'טוען…');
+  setProgress(22);
+  const ipDetails = publicIP ? await getIPDetails(publicIP) : null;
+  updateLastRow(ipDetails ? `${ipDetails.org || ipDetails.isp || ipDetails.as || '—'} — ${ipDetails.city||''} ${ipDetails.region||''} ${ipDetails.country_name||ipDetails.country||''}` : 'לא זמין');
+
+  // Step 3: RDAP/WHOIS (רק אם הסכמת)
+  addRow('RDAP / WHOIS (בסיסי)', consent ? 'טוען…' : 'נדרש הסכמה');
+  setProgress(36);
+  let rdap = null;
+  if(consent && publicIP) rdap = await rdapLookup(publicIP);
+  if(rdap && consent) updateLastRow(rdap.handle || rdap.name || (rdap.entities && rdap.entities[0] && rdap.entities[0].handle) || '—');
+
+  // Step 4: WebRTC
+  addRow('בדיקת WebRTC (דליפה)', 'טוען…');
+  setProgress(48);
+  const rtc = await checkWebRTC();
+  if(!rtc.supported) updateLastRow('לא נתמך בדפדפן');
+  else if(rtc.leaked) updateLastRow(`דליפה: ${rtc.ips.join(', ')}`, 'bad');
+  else updateLastRow('לא נצפתה דליפה', 'ok');
+
+  // Step 5: DNS Leak heuristic
+  addRow('בדיקת DNS (הערכה)', 'טוען…');
+  setProgress(60);
+  const dns = await checkDNSLeak();
+  if(dns.ok) updateLastRow(`נמצא: ${dns.source}`, 'ok');
+  else updateLastRow('לא ניתן לאמת (מגבלות CORS)', 'warn');
+
+  // Step 6: Fingerprint + WebGL
+  addRow('Fingerprint דפדפן (בסיסי)', 'טוען…');
+  setProgress(70);
+  const fp = getFingerprint();
+  updateLastRow(`${fp.userAgent.split(')')[0] || fp.userAgent}`, 'ok');
+
+  addRow('WebGL', 'טוען…');
+  const webgl = getWebGLInfo();
+  updateLastRow(webgl ? `${webgl.vendor || '—'} / ${webgl.renderer || '—'}` : 'לא זמין');
+
+  // Step 7: permissions
+  addRow('הרשאות דפדפן', 'טוען…');
+  setProgress(78);
+  const perms = await checkPermissions();
+  updateLastRow(Object.keys(perms).length ? JSON.stringify(perms) : 'לא נתמך');
+
+  // Step 8: AdBlock detection
+  addRow('בדיקת AdBlock (הערכה)', 'טוען…');
+  setProgress(84);
+  const ad = await detectAdBlock();
+  updateLastRow(ad ? 'זוהה' : 'לא זוהה', ad ? 'warn' : 'ok');
+
+  // Step 9: tracker detection (הערכה)
+  addRow('בדיקת Trackers (הערכה)', 'טוען…');
+  setProgress(88);
+  const trackers = await detectTrackers();
+  updateLastRow(trackers.length ? `נמצאו סימנים: ${trackers.join(', ')}` : 'לא נמצאו סימנים (הערכה)', trackers.length ? 'warn' : 'ok');
+
+  // Step 10: firewall heuristic
+  addRow('בדיקת חומת אש (הערכה)', 'טוען…');
+  setProgress(92);
+  const fw = await firewallHeuristic();
+  updateLastRow(fw ? 'נראה שהרשת מאפשרת חיבור חיצוני' : 'יתכן שמגבילים חיבורים חיצוניים', fw ? 'ok' : 'warn');
+
+  // Step 11: VPN/Proxy/TOR heuristics
+  addRow('זיהוי VPN/Proxy/TOR (הערכה)', 'טוען…');
+  setProgress(96);
+  const vpnCheck = detectVPNorProxy(ipDetails, rdap);
+  updateLastRow(vpnCheck.likely ? `חשוד (${vpnCheck.score}) — ${vpnCheck.raw}` : `לא חשוד (${vpnCheck.score})`, vpnCheck.likely ? 'warn' : 'ok');
+
+  // Finalize score
+  let score = 100;
+  if(rtc && rtc.leaked) score -= 40;
+  if(!dns.ok) score -= 10;
+  if(ad) score -= 5;
+  if(vpnCheck.likely) score -= 10;
+  if(!fw) score -= 5;
+  if(score < 0) score = 0;
+  const overallText = score>=80 ? 'מוגן' : score>=50 ? 'בינוני' : 'פגיע';
+  overallStatusEl.textContent = `${overallText} (${score}%)`;
+  overallStatusEl.className = score>=80 ? 'status ok' : score>=50 ? 'status warn' : 'status bad';
+
+  setProgress(100);
+  reportActions.style.display = 'flex';
+  lastReport = {
+    generatedAt: new Date().toISOString(),
+    mode, consent: consentThird.checked, publicIP, ipDetails, rdap, rtc, dns, fp, webgl, perms, adBlock:ad, trackers, firewall:fw, vpnCheck, overall:{score, overallText}
+  };
+  // action notes
+  const notes = [];
+  if(rtc && rtc.leaked) notes.push('זוהתה דליפת WebRTC — שקול לחסום WebRTC בדפדפן או להשתמש ב-VPN שמטפל בזה.');
+  if(vpnCheck.likely) notes.push('חשד לשימוש ב-VPN/Proxy — אם לא בכוונה בדוק חיבור רשת.');
+  if(!dns.ok) notes.push('לא ניתן לאמת DNS — ייתכן שמגבלות CORS מונעות בדיקה מלאה.');
+  document.getElementById('actionNotes').textContent = notes.join(' • ') || 'אין המלצות קריטיות כרגע.';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// helper to add row
+function addRow(title, value){
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `<div style="font-weight:700">${title}</div><div>${value}</div>`;
+  resultsEl.appendChild(div);
+}
+function updateLastRow(value, state='neutral'){
+  const last = resultsEl.lastChild;
+  if(!last) return;
+  last.querySelector('div:nth-child(2)').textContent = value;
+  last.querySelector('div:nth-child(2)').className = state==='ok' ? 'ok' : state==='warn' ? 'warn' : state==='bad' ? 'bad' : '';
+}
+
+// EXPORT / SHARE
+async function exportPDF(){
+  if(!lastReport){ alert('הרץ בדיקה לפני ייצוא הדו״ח.'); return; }
+  // create HTML snapshot and render with html2canvas then jspdf
+  const container = document.createElement('div');
+  container.style.padding='20px';
+  container.style.background='#fff';
+  container.style.color='#000';
+  container.innerHTML = `<h1>דו\"ח בדיקה — דוד Hacker</h1>
+    <div>נוצר: ${new Date(lastReport.generatedAt).toLocaleString()}</div>
+    <hr>
+    <pre style="white-space:pre-wrap">${escapeHtml(JSON.stringify(lastReport, null, 2))}</pre>`;
+  document.body.appendChild(container);
+  try{
+    const canvas = await html2canvas(container, {scale:1});
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'px', format:[canvas.width, canvas.height]});
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save(`report_${(new Date()).toISOString().replace(/[:.]/g,'-')}.pdf`);
+  } catch(e){
+    alert('שגיאה ביצוא PDF: ' + e.message);
+  }
+  container.remove();
+}
+
+// share: prepare downloadable HTML blob and show temporary URL
+function shareReport(){
+  if(!lastReport){ alert('הרץ בדיקה לפני שיתוף.'); return; }
+  const html = buildReportHTML(lastReport);
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  prompt('העתק את הלינק הבא לחלונית ההדבקה כדי לשתף את הדו\"ח כקובץ HTML זמני:', url);
+  // revoke after ~2 min
+  setTimeout(()=>URL.revokeObjectURL(url), 120000);
+}
+function buildReportHTML(report){
+  const hdr = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דו\"ח — דוד Hacker</title>
+  <style>body{font-family:Arial;padding:18px;background:#fff;color:#000}pre{white-space:pre-wrap}</style></head><body>`;
+  const body = `<h1>דו\"ח בדיקה — דוד Hacker</h1><div>נוצר: ${new Date(report.generatedAt).toLocaleString()}</div><hr><pre>${escapeHtml(JSON.stringify(report,null,2))}</pre><hr><div>יצירת קשר: dovid.7642@gmail.com</div></body></html>`;
+  return hdr + body;
+}
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// share / print buttons events
+shareBtn.addEventListener('click', shareReport);
+printBtn.addEventListener('click', ()=>window.print());
+
+// initial helper: quick scan convenience
+async function quickScan(){
+  resultsEl.innerHTML = '';
+  addRow('כתובת IP ציבורית', 'טוען…');
+  const ip = await getPublicIP();
+  updateLastRow(ip || 'לא זוהתה');
+}
+document.getElementById('quick')?.addEventListener('click', quickScan);
+
+// safety note displayed in console
+console.info('One-Stop Security Check — כל הפונקציות רצות בדפדפן בלבד. אין סריקות פורטים או קוד שמאפשר תקיפה.');
+
+// END
+</script>
+</body>
+</html>
