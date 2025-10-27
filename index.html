@@ -1,140 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cyber Scan Pro | דוד Hacker</title>
-
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Referrer-Policy" content="no-referrer">
-<meta name="robots" content="noindex, nofollow">
-
-<meta http-equiv="Content-Security-Policy" content="
-  default-src 'self' https: data:;
-  script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  connect-src *;
-  img-src 'self' data: https:;
-  frame-src 'self' https:;
-">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אתר הדגמה</title>
 <style>
-:root{
-  --bg:#071427; --card:#0b1b27; --accent:#06b6d4; --muted:#9fb2c4; --ok:#2ecc71; --warn:#f39c12; --bad:#ff5252;
-  --glass: rgba(255,255,255,0.03);
-}
-*{box-sizing:border-box;font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
-body{margin:0;background:linear-gradient(180deg,#04111a 0%, #071427 100%);color:#e6eef6;min-height:100vh;direction:rtl}
-header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.03)}
-.brand{display:flex;gap:12px;align-items:center}
-.logoBox{display:flex;align-items:center;gap:12px}
-.logoSVG{width:52px;height:52px}
-.title{font-weight:800;font-size:18px}
-.subtitle{color:var(--muted);font-size:13px}
-.controls{display:flex;gap:8px;align-items:center}
-select,input[type="checkbox"]{padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
-button{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:#012;cursor:pointer;font-weight:700}
-button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-main{padding:18px;display:grid;grid-template-columns:1fr 380px;gap:18px}
-.card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-h2{margin:0 0 10px 0;font-size:18px}
-.small{font-size:13px;color:var(--muted)}
-.row{display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);margin-bottom:8px}
-.status{font-weight:800}
-.ok{color:var(--ok)}
-.warn{color:var(--warn)}
-.bad{color:var(--bad)}
-.progress{height:10px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-top:10px}
-.progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8ee7ff);width:0%}
-pre{background:#06121a;padding:12px;border-radius:8px;overflow:auto}
-.footerNote{font-size:12px;color:var(--muted);margin-top:8px}
-.toggle{display:flex;align-items:center;gap:8px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media (max-width:980px){main{grid-template-columns:1fr} .controls{flex-direction:column;align-items:flex-end}}
-body.light{background:#f6f8fa;color:#081826}
-body.light .card{background:#fff;color:#081826}
-body.light button{color:#fff}
-body.light .subtitle{color:#6b7280}
+  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+  header, footer { background:#222; color:#fff; padding:10px 20px; text-align:center; }
+  main { padding:20px; }
+  button { margin:5px; padding:10px 20px; cursor:pointer; }
+  .hidden { display:none; }
+  select { padding:5px; }
 </style>
+<script>
+// פונקציה לטעינת האתר בצורה חלקה
+function onLoad() {
+    console.log("האתר נטען בהצלחה");
+    // קישור הכפתורים למצב מתחיל/מומחה
+    document.getElementById('beginnerBtn').addEventListener('click', () => alert('מצב מתחיל נבחר'));
+    document.getElementById('expertBtn').addEventListener('click', () => alert('מצב מומחה נבחר'));
+    // שפה
+    document.getElementById('languageSelect').addEventListener('change', (e) => {
+        alert('שפה נבחרה: ' + e.target.value);
+    });
+}
+</script>
 </head>
-<body>
-
+<body onload="onLoad()">
 <header>
-  <div class="brand">
-    <div class="logoBox">
-      <svg class="logoSVG" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g>
-          <circle cx="32" cy="32" r="30" fill="#0b1220"/>
-          <path d="M16 40c0-8 9-14 16-14s16 6 16 14" stroke="#fff" stroke-width="2" fill="none"/>
-          <path d="M20 28c2-4 6-6 12-6s10 2 12 6" stroke="#fff" stroke-width="2" fill="none"/>
-          <path d="M24 44c4 4 12 4 16 0" stroke="#fff" stroke-width="2" fill="none"/>
-          <circle cx="22" cy="30" r="1.8" fill="#fff"/>
-          <circle cx="42" cy="30" r="1.8" fill="#fff"/>
-        </g>
-      </svg>
-    </div>
-    <div>
-      <div class="title">Cyber Scan Pro | דוד Hacker</div>
-      <div class="subtitle">כלי בדיקות פרטיות ואבטחה — מצב: מומחה / מתחיל</div>
-    </div>
-  </div>
+    <h1>ברוכים הבאים לאתר הדגמה</h1>
+</header>
+<main>
+    <h2>בחירת מצב</h2>
+    <button id="beginnerBtn">מצב מתחיל</button>
+    <button id="expertBtn">מצב מומחה</button>
 
-  <div class="controls">
-    <label class="small">שפה
-      <select id="langSelect">
+    <h2>בחירת שפה</h2>
+    <select id="languageSelect">
         <option value="he">עברית</option>
         <option value="en">English</option>
         <option value="ar">العربية</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
         <option value="ru">Русский</option>
-      </select>
-    </label>
-
-    <div class="toggle small">
-      <label>תאורה</label>
-      <button id="themeBtn" class="ghost">Light</button>
-    </div>
-
-    <div class="modes small" style="align-items:center">
-      מצב:
-      <button id="modeBeginner" class="ghost">מתחיל</button>
-      <button id="modeExpert">מומחה</button>
-    </div>
-
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="startBtn">התחל בדיקות</button>
-      <button id="exportPdf" class="ghost">ייצא PDF</button>
-    </div>
-  </div>
-</header>
-
-<main>
-<section class="card" id="mainPanel">
-  <h2 id="panelTitle">סקירה מהירה</h2>
-  <div class="small" id="panelSubtitle">בחר מצב והתחל בדיקות — בסיום תקבל דו״ח מפורט שניתן לשתף/להוריד.</div>
-  <div class="progress" aria-hidden="true"><span id="progBar"></span></div>
-  <div id="results" style="margin-top:12px"></div>
-  <div id="actionNotes" class="small footerNote"></div>
-  <div id="reportActions" style="margin-top:12px;display:none">
-    <button id="shareBtn" class="ghost">קבל קובץ שיתוף (HTML)</button>
-    <button id="printBtn" class="ghost">הדפס/שמור כ-PDF</button>
-  </div>
-
-  <hr style="margin:14px 0;border:none;border-top:1px dashed rgba(255,255,255,0.04)">
-
-  <h2>עורך HTML בזמן אמת (Sandboxed)</h2>
-  <div class="small">הכנס קוד HTML/JS מקומי — התצוגה רצה ב־iframe מבודד.</div>
-  <div style="margin-top:8px">
-    <textarea id="editor" style="width:100%;height:120px;font-family:monospace;border-radius:8px;padding:8px;">&lt;div style="padding:18px;font-family:system-ui"&gt;שלום — תצוגה מקומית&lt;/div&gt;</textarea>
-    <div style="display:flex;gap:8px;margin-top:8px"><button id="runPreview">הצג תצוגה</button><button id="resetPreview" class="ghost">איפוס</button></div>
-    <iframe id="preview" class="card" style="width:100%;height:220px;border-radius:8px;margin-top:8px" sandbox="allow-scripts"></iframe>
-  </div>
-</section>
-
-<aside class="card">
-<h2>פרטי קשר וזכויות</h2>
-<div class="small">דוד Hacker — אין להעתיק בשום צורה. לפניות: <a href="mailto:hacker.david.7642@gmail.com" style="color:var(--accent)">hacker.david.7642@gmail.com</a></div>
-
-<h
+        <option value="zh">中文</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+        <option value="ja">日本語</option>
+    </select>
+</main>
+<footer>
+    <p>זכויות יוצרים &copy; 2025 - <a href="mailto:hacker.david.7642@gmail.com" style="color:#fff;">hacker.david.7642@gmail.com</a></p>
+</footer>
+</body>
+</html>
