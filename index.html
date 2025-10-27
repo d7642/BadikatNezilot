@@ -1,126 +1,579 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>בדיקת אבטחה פרו | Cyber Scan Pro</title>
+<meta name="description" content="בדיקת אבטחה פרו — כלים לבדיקה מהירה של IP, WebRTC, DNS, Fingerprint ועוד.">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- זהו CSP בסיסי; אם תעביר לשרת אמיתי כוונן לפי endpoints חיצוניים שתשתמש בהם -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src *; img-src 'self' data: https:;">
+
 <style>
-body {font-family: Arial, sans-serif; margin:0; background:#1a1a1a; color:#eee;}
-header {background:#0d6efd; padding:20px; text-align:center;}
-header h1 {margin:0; font-size:32px;}
-nav {background:#222; padding:10px; display:flex; justify-content:space-around; flex-wrap:wrap;}
-nav button {background:#0d6efd; color:#fff; border:none; padding:10px 20px; margin:5px; cursor:pointer;}
-nav button:hover {background:#0056b3;}
-main {padding:20px;}
-section {margin-bottom:20px;}
-#cookieConsent {position:fixed; bottom:0; left:0; right:0; background:#333; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;}
-#cookieConsent button {margin-left:5px; padding:5px 10px; cursor:pointer; background:#0d6efd; border:none; color:#fff;}
-select {padding:5px; margin-left:5px;}
-footer {background:#111; color:#aaa; padding:10px; text-align:center; font-size:12px;}
+:root{
+  --bg:#0b0b0d;
+  --panel:#0f0f12;
+  --accent:#ff3b3b;
+  --muted:#9aa3ad;
+  --card-radius:12px;
+  --text:#e8eef6;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:linear-gradient(180deg,#050406 0%,#0b0b0d 100%);color:var(--text);-webkit-font-smoothing:antialiased}
+.container{max-width:1200px;margin:18px auto;padding:12px}
+header{display:flex;gap:12px;align-items:center}
+.logo{display:flex;gap:12px;align-items:center}
+.logo svg{width:64px;height:64px}
+h1{margin:0;font-size:20px}
+.subtitle{color:var(--muted);font-size:13px}
+.controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+select,input[type="checkbox"],button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text);padding:8px;border-radius:8px}
+button.primary{background:linear-gradient(90deg,var(--accent),#ff7b7b);border:none;color:#0b0b0d;font-weight:700}
+main{display:grid;grid-template-columns:260px 1fr 360px;gap:16px;margin-top:14px}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:14px;border-radius:var(--card-radius);min-height:420px}
+.sidebar{background:var(--panel);padding:12px;border-radius:12px;height:calc(100vh - 120px);overflow:auto}
+.menu{display:flex;flex-direction:column;gap:8px}
+.menu button{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px}
+.card{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
+.small{color:var(--muted);font-size:13px}
+pre{background:#08080a;padding:12px;border-radius:8px;overflow:auto;color:var(--text)}
+.chat-window{background:#070708;padding:8px;border-radius:8px;height:220px;overflow:auto}
+.cookie-banner{position:fixed;left:16px;right:16px;bottom:16px;background:#0b0b0d;padding:12px;border-radius:10px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+.cookie-banner .muted{color:var(--muted)}
+.footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+.hidden{display:none}
+@media (max-width:1100px){main{grid-template-columns:1fr;}.sidebar{height:auto}.controls{flex-wrap:wrap}}
 </style>
 </head>
 <body>
+  <div class="container" id="app">
+    <header>
+      <div class="logo" role="img" aria-label="Cyber Scan Pro logo">
+        <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#ff3b3b"/><stop offset="1" stop-color="#ff7b7b"/></linearGradient></defs>
+          <path d="M64 8c0 0 36 8 44 28 8 20 4 44 4 44s-20 24-48 40C36 108 16 84 16 84s-4-24 4-44C28 16 64 8 64 8z" fill="url(#g1)"/>
+          <circle cx="64" cy="60" r="10" fill="#060608"/>
+        </svg>
+        <div>
+          <h1>בדיקת אבטחה פרו <small style="font-size:12px;color:var(--muted);display:block">Cyber Scan Pro</small></h1>
+          <div class="subtitle">כלים אמיתיים לבדיקה — רוץ בדפדפן בלבד</div>
+        </div>
+      </div>
 
-<header>
-<h1>Cyber Scan Pro</h1>
-</header>
+      <div class="controls" role="region" aria-label="controls">
+        <label class="small">שפה
+          <select id="langSelect" aria-label="בחירת שפה"></select>
+        </label>
+        <button id="themeBtn" class="ghost">Light</button>
+      </div>
+    </header>
 
-<nav>
-<button onclick="showBeginner()">מצב מתחיל</button>
-<button onclick="showExpert()">מצב מומחה</button>
-<select id="languageSelect" onchange="changeLanguage()">
-<option value="he" selected>עברית</option>
-<option value="en">English</option>
-<option value="ar">العربية</option>
-<option value="fr">Français</option>
-<option value="de">Deutsch</option>
-<option value="es">Español</option>
-<option value="ru">Русский</option>
-<option value="zh">中文</option>
-<option value="ja">日本語</option>
-<option value="ko">한국어</option>
-<option value="it">Italiano</option>
-<option value="pt">Português</option>
-<option value="hi">हिन्दी</option>
-<option value="bn">বাংলা</option>
-<option value="tr">Türkçe</option>
-<option value="pl">Polski</option>
-<option value="nl">Nederlands</option>
-<option value="sv">Svenska</option>
-<option value="no">Norsk</option>
-<option value="da">Dansk</option>
-<option value="fi">Suomi</option>
-<option value="cs">Čeština</option>
-<option value="el">Ελληνικά</option>
-<option value="he">עברית</option>
-<option value="th">ไทย</option>
-<option value="vi">Tiếng Việt</option>
-<option value="id">Bahasa Indonesia</option>
-<option value="ro">Română</option>
-<option value="hu">Magyar</option>
-<option value="sk">Slovenčina</option>
-<option value="bg">Български</option>
-<option value="sr">Српски</option>
-<option value="hr">Hrvatski</option>
-<option value="lt">Lietuvių</option>
-<option value="lv">Latviešu</option>
-<option value="et">Eesti</option>
-<option value="ms">Bahasa Melayu</option>
-<option value="fa">فارسی</option>
-<option value="ur">اردو</option>
-<option value="ta">தமிழ்</option>
-</select>
-</nav>
+    <main>
+      <aside class="sidebar" aria-label="תפריט">
+        <div class="menu" role="menu">
+          <button data-action="dashboard">לוח בקרה <span class="small">Home</span></button>
+          <button data-action="quick">בדיקה מהירה</button>
+          <button id="btnFull" data-action="full">מצב מומחה (Full)</button>
+          <button data-action="sandbox">סקריפט בלייב (Sandbox)</button>
+          <button data-action="support">תמיכה / פנייה</button>
+          <button data-action="reports">דו"חות</button>
+          <button data-action="settings">הגדרות</button>
+        </div>
 
-<main>
-<section id="beginner" style="display:none;">
-<h2>מצב מתחיל</h2>
-<p>כאן יוצגו מידע בסיסי על כתובת IP, ספק אינטרנט ו-DNS.</p>
-</section>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+        <h3 class="small">כלים מהירים</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <button id="quickIpBtn">בדוק IP</button>
+          <button id="quickWebrtcBtn">בדוק WebRTC</button>
+          <button id="quickDnsBtn">בדוק DNS</button>
+        </div>
 
-<section id="expert" style="display:none;">
-<h2>מצב מומחה</h2>
-<p>בדיקות אבטחה מתקדמות (דמו בלבד).</p>
-</section>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+        <div class="small">חסימת מדינות (UI בלבד)</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+          <label><input type="checkbox" class="block-country" value="SY"> סוריה</label>
+          <label><input type="checkbox" class="block-country" value="IR"> איראן</label>
+          <label><input type="checkbox" class="block-country" value="LB"> לבנון</label>
+          <label><input type="checkbox" class="block-country" value="JO"> ירדן</label>
+        </div>
+      </aside>
 
-<section id="contact">
-<h2>צור קשר</h2>
-<p>אפשר לשלוח מייל לכתובת: <a href="mailto:hacker.david.7642@gmail.com">hacker.david.7642@gmail.com</a></p>
-</section>
-</main>
+      <section class="panel" id="center">
+        <h2 id="pageTitle">לוח בקרה</h2>
+        <div class="small" id="pageSubtitle">השתמש ב"בדיקה מהירה" או עבור ל-"מצב מומחה" להרצה מלאה.</div>
 
-<div id="cookieConsent">
-<p>האתר משתמש בקוקיז. באישור או דחייה חלקית/כולל, חלק מהפונקציות עשויות לא לעבוד.</p>
-<div>
-<button onclick="acceptCookies()">אשר הכל</button>
-<button onclick="rejectCookies()">דחה הכל</button>
-<button onclick="partialCookies()">אישור חלקי</button>
-</div>
-</div>
+        <div style="margin-top:12px" id="contentArea">
+          <!-- Dashboard -->
+          <div id="dashboardView">
+            <div class="card">
+              <h3>בדיקה מהירה</h3>
+              <p class="small">מראה IP ציבורי ומהירות תגובה בסיסית.</p>
+              <div style="margin-top:8px">
+                <button id="startQuick" class="primary">התחל בדיקה מהירה</button>
+                <button id="downloadReport" style="margin-left:8px;">הורד דוח (JSON)</button>
+              </div>
+              <div style="margin-top:12px"><pre id="quickOutput">טרם רוץ בדיקה מהירה</pre></div>
+            </div>
 
-<footer>
-<p>&copy; 2025 Cyber Scan Pro. אסור להעתיק ללא אישור בכתב.</p>
-</footer>
+            <div style="margin-top:12px" class="card">
+              <h3>סטטוס כללי</h3>
+              <div id="statusOverview" class="small">ממתין לפעולה...</div>
+            </div>
+          </div>
+
+          <!-- Full scan -->
+          <div id="fullView" class="hidden">
+            <div class="card">
+              <h3>מצב מומחה — בדיקה מלאה</h3>
+              <div class="small">הבדיקות המרוכבות יתבצעו כאן (עד ~2 דקות במקרים מסוימים).</div>
+              <div style="margin-top:10px">
+                <button id="runFull" class="primary">הרץ בדיקה מלאה</button>
+                <button id="downloadFull" style="margin-left:8px">הורד דוח מלא (JSON)</button>
+              </div>
+              <div style="margin-top:12px"><pre id="fullOutput">טרם הושלמה בדיקה מלאה</pre></div>
+            </div>
+          </div>
+
+          <!-- Sandbox -->
+          <div id="sandboxView" class="hidden">
+            <div class="card">
+              <h3>סקריפט בלייב — סנדבוקס</h3>
+              <div class="small">הרצת HTML/JS בתוך iframe מבודד (אין גישה ל-parent או cookies).</div>
+              <textarea id="sandboxCode" style="width:100%;height:140px;margin-top:8px;background:#0b0b0d;color:var(--text);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)">&lt;div style="padding:12px;color:#fff"&gt;Hello sandbox&lt;/div&gt;</textarea>
+              <div style="margin-top:8px"><button id="runSandbox">הרץ בסנדבוקס</button></div>
+              <iframe id="sandboxFrame" style="width:100%;height:220px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+
+          <!-- Support view -->
+          <div id="supportView" class="hidden">
+            <div class="card">
+              <h3>צור קשר / תמיכה</h3>
+              <div class="small">שלח מייל ישירות (mailto) או שמור פנייה מקומית (דמו).</div>
+              <label>שם</label><input id="supName" type="text" placeholder="שמך" style="margin-top:6px">
+              <label>אימייל</label><input id="supEmail" type="email" placeholder="you@mail.com" style="margin-top:6px">
+              <label>הודעה</label><textarea id="supMsg" rows="4" style="margin-top:6px"></textarea>
+              <div style="margin-top:8px">
+                <button id="sendTicket" class="primary">שלח פנייה</button>
+                <button id="saveTicket" class="ghost">שמור לטיוטה (דמו)</button>
+              </div>
+              <div class="small" style="margin-top:8px">שילוח מייל עובד דרך mailto: — ללא מנגנון אנטי‑ספאם. לשילוח אמיתי דרוש backend (אסביר איך לחבר בעתיד).</div>
+            </div>
+          </div>
+
+          <!-- Reports / settings placeholders -->
+          <div id="reportsView" class="hidden"><div class="card"><h3>דו"חות</h3><div id="reportsList" class="small">אין דו"חות שמורים</div></div></div>
+          <div id="settingsView" class="hidden"><div class="card"><h3>הגדרות</h3><div class="small">אפשרויות שפה, קנפוג קוקיז ועוד.</div></div></div>
+        </div>
+      </section>
+
+      <aside class="panel" id="right">
+        <div class="card">
+          <h3>תמיכה / צ'אט (דמו)</h3>
+          <div class="small">צ'אט דמו שנשמר ב־localStorage; לחיבור אמיתי דרוש backend / Firebase.</div>
+          <div id="chat" class="chat-window" aria-live="polite">אין הודעות</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="chatInput" type="text" placeholder="הקלד הודעה..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)">
+            <button id="chatSend" class="primary">שלח</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h4>זכויות יוצרים</h4>
+          <div class="small">© <span id="year"></span> Cyber Scan Pro — אסור להעתיק ללא אישור בכתב. בעלים: דוד. תמיכה: <a href="mailto:hacker.david.7642@gmail.com" style="color:var(--accent)">hacker.david.7642@gmail.com</a></div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="cookieBanner" class="cookie-banner" role="dialog" aria-label="Cookie consent" style="display:none">
+      <div>
+        <strong>Cookie Notice</strong>
+        <div class="muted" style="margin-top:6px">האתר משתמש בקוקיז כדי לשפר חוויית שימוש. בחר/י מה להפעיל.</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button id="cookieAllow" class="primary">אשר הכל</button>
+        <button id="cookiePartial" class="ghost">בחר עוגיות</button>
+        <button id="cookieDeny" class="ghost">דחה הכל</button>
+      </div>
+    </div>
+
+    <div class="footer">אתר זה מוצג כהדגמה. לחיבור פיצ'רים מתקדמים — אדריך אותך איך לשלב backend.</div>
+  </div>
 
 <script>
-function showBeginner() {
-  document.getElementById('beginner').style.display = 'block';
-  document.getElementById('expert').style.display = 'none';
-  alert('מצב מתחיל נבחר');
-}
-function showExpert() {
-  document.getElementById('expert').style.display = 'block';
-  document.getElementById('beginner').style.display = 'none';
-  alert('מצב מומחה נבחר');
-}
-function changeLanguage() {
-  let lang = document.getElementById('languageSelect').value;
-  alert('שפת האתר שונתה ל: ' + lang);
-}
-function acceptCookies(){document.getElementById('cookieConsent').style.display='none';alert('הקוקיז אושרו');}
-function rejectCookies(){document.getElementById('cookieConsent').style.display='none';alert('הקוקיז נדחו');}
-function partialCookies(){document.getElementById('cookieConsent').style.display='none';alert('אושרו חלק מהקוקיז');}
-</script>
+/* =============================
+   Cyber Scan Pro — Client-only
+   מה שהקוד עושה:
+   - runQuickScan() — בדיקה מהירה שמושכת IP ציבורי ו-WebRTC (best-effort)
+   - runFullScan() — בדיקה מלאה עם מרכיבים שניתן להריץ בדפדפן
+   - כל הפונקציות רצות אחרי DOMContentLoaded
+   - אין אמינות מלאה כמו צד-שרת, אבל זה "אמיתי" במסגרת מה שמותר בדפדפן
+   ============================= */
 
+const TRANSLATIONS = {
+  he:{name:'עברית',dir:'rtl',dashboard:'לוח בקרה',quick:'בדיקה מהירה',full:'מצב מומחה',support:'תמיכה'},
+  en:{name:'English',dir:'ltr',dashboard:'Dashboard',quick:'Quick scan',full:'Expert mode',support:'Support'},
+  // שאר השפות יופיעו ברשימת ה-select אך כאן נניח רק שמות לשפות הראשיות; הרחבה של תרגום UI נעשית לפי צורך
+};
+
+// Utilities
+const el = id => document.getElementById(id);
+const setText = (id, txt) => { const e = el(id); if(e) e.textContent = txt; };
+
+document.addEventListener('DOMContentLoaded', () => {
+  // populate languages (40+)
+  const langSelect = el('langSelect');
+  const LANGS = [
+    ['he','עברית'],['en','English'],['ar','العربية'],['fr','Français'],['de','Deutsch'],['es','Español'],
+    ['ru','Русский'],['zh','中文'],['ja','日本語'],['ko','한국어'],['it','Italiano'],['pt','Português'],
+    ['hi','हिन्दी'],['bn','বাংলা'],['tr','Türkçe'],['pl','Polski'],['nl','Nederlands'],['sv','Svenska'],
+    ['no','Norsk'],['da','Dansk'],['fi','Suomi'],['cs','Čeština'],['el','Ελληνικά'],['th','ไทย'],
+    ['vi','Tiếng Việt'],['id','Bahasa Indonesia'],['ro','Română'],['hu','Magyar'],['sk','Slovenčina'],
+    ['bg','Български'],['sr','Српски'],['hr','Hrvatski'],['lt','Lietuvių'],['lv','Latviešu'],['et','Eesti'],
+    ['ms','Bahasa Melayu'],['fa','فارسی'],['ur','اردو'],['ta','தமிழ்'],['he','עברית-2'] // duplicate safe
+  ];
+  LANGS.forEach(([code,name])=>{
+    const o = document.createElement('option'); o.value=code; o.textContent=name; if(code==='he') o.selected=true;
+    langSelect.appendChild(o);
+  });
+
+  // year
+  el('year').textContent = new Date().getFullYear();
+
+  // menu actions
+  document.querySelectorAll('.menu button').forEach(b=>{
+    b.addEventListener('click', ()=>handleMenu(b.dataset.action || b.id));
+  });
+
+  el('startQuick').addEventListener('click', runQuickScan);
+  el('downloadReport').addEventListener('click', ()=>downloadJSON(window.quickReport, 'quick-report'));
+  el('runFull').addEventListener('click', runFullScan);
+  el('downloadFull').addEventListener('click', ()=>downloadJSON(window.fullReport, 'full-report'));
+  el('runSandbox').addEventListener('click', runSandbox);
+  el('chatSend').addEventListener('click', sendChat);
+  el('sendTicket').addEventListener('click', sendTicket);
+  el('saveTicket').addEventListener('click', saveTicketLocal);
+
+  el('quickIpBtn').addEventListener('click', runQuickScan);
+  el('quickWebrtcBtn').addEventListener('click', ()=>checkWebRTCIce().then(r=>alert('WebRTC: '+(r.leaked?('דליפה: '+r.ips.join(',')):'לא נצפתה'))));
+  el('quickDnsBtn').addEventListener('click', ()=>checkDNSLeak().then(r=>alert('DNS: '+(r.ok?r.source:'לא זוהה'))));
+
+  // cookie banner
+  if(!localStorage.getItem('cyberscan_cookie')) el('cookieBanner').style.display = 'flex';
+  el('cookieAllow').addEventListener('click', ()=>{ localStorage.setItem('cyberscan_cookie','all'); el('cookieBanner').style.display='none'; });
+  el('cookieDeny').addEventListener('click', ()=>{ localStorage.setItem('cyberscan_cookie','none'); el('cookieBanner').style.display='none'; });
+  el('cookiePartial').addEventListener('click', ()=>{ showCookieModal(); });
+
+  // sandbox init
+  el('sandboxFrame').srcdoc = '<div style="padding:12px;color:#ddd;background:#000">Sandbox preview</div>';
+
+  // language change
+  langSelect.addEventListener('change', (e)=>changeLang(e.target.value));
+
+  // default view
+  handleMenu('dashboard');
+});
+
+// Menu router
+function handleMenu(action){
+  ['dashboardView','fullView','sandboxView','supportView','reportsView','settingsView'].forEach(id=>{
+    const elc = document.getElementById(id);
+    if(elc) elc.classList.add('hidden');
+  });
+  setText('pageTitle','לוח בקרה');
+  setText('pageSubtitle','השתמש ב"בדיקה מהירה" או עבור ל-"מצב מומחה" להרצה מלאה.');
+  switch(action){
+    case 'dashboard': document.getElementById('dashboardView').classList.remove('hidden'); break;
+    case 'quick': document.getElementById('dashboardView').classList.remove('hidden'); break;
+    case 'full': document.getElementById('fullView').classList.remove('hidden'); setText('pageTitle','מצב מומחה'); break;
+    case 'sandbox': document.getElementById('sandboxView').classList.remove('hidden'); setText('pageTitle','סנדבוקס'); break;
+    case 'support': document.getElementById('supportView').classList.remove('hidden'); setText('pageTitle','תמיכה'); break;
+    case 'reports': document.getElementById('reportsView').classList.remove('hidden'); setText('pageTitle','דו"חות'); break;
+    case 'settings': document.getElementById('settingsView').classList.remove('hidden'); setText('pageTitle','הגדרות'); break;
+    default: document.getElementById('dashboardView').classList.remove('hidden');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===== Utilities ===== */
+function downloadJSON(obj, name='report'){
+  if(!obj){ alert('אין דוח להורדה'); return; }
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = `${name}_${new Date().toISOString().replace(/[:.]/g,'-')}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ===== Quick scan (real client-side checks) ===== */
+async function runQuickScan(){
+  el('quickOutput').textContent = 'מריץ בדיקה מהירה...';
+  const report = {generatedAt:new Date().toISOString()};
+  try{
+    report.publicIP = await getPublicIP();
+  }catch(e){ report.publicIP = null; }
+  try{
+    report.webrtc = await checkWebRTCIce();
+  }catch(e){ report.webrtc = {supported:false,leaked:false,ips:[]}; }
+  try{
+    const fp = getFingerprint(); report.fingerprint = fp;
+  }catch(e){}
+  el('quickOutput').textContent = JSON.stringify(report, null, 2);
+  window.quickReport = report;
+  setText('statusOverview','בדיקה מהירה הושלמה.');
+}
+
+/* ===== Full scan (expert) ===== */
+async function runFullScan(){
+  el('fullOutput').textContent = 'מתחיל בדיקה מלאה — נא להמתין (יכל לקחת עד כמה עשרות שניות)...';
+  const report = {generatedAt:new Date().toISOString()};
+  try{
+    report.publicIP = await getPublicIP();
+  }catch(e){ report.publicIP = null; }
+  try{
+    if(report.publicIP) report.ipDetails = await getIPDetails(report.publicIP);
+  }catch(e){}
+  try{
+    report.webrtc = await checkWebRTCIce();
+  }catch(e){ report.webrtc = {supported:false,leaked:false,ips:[]}; }
+  try{ report.dns = await checkDNSLeak(); }catch(e){}
+  try{ report.fingerprint = getFingerprint(); }catch(e){}
+  try{ report.webgl = getWebGLInfo(); }catch(e){}
+  try{ report.permissions = await checkPermissions(); }catch(e){}
+  try{ report.adBlock = await detectAdBlock(); }catch(e){}
+  try{ report.trackers = await detectTrackers(); }catch(e){}
+  try{ report.firewall = await firewallHeuristic(); }catch(e){}
+  try{ report.vpn = detectVPNorProxy(report.ipDetails || null, null); }catch(e){}
+  // finalize score heuristic
+  let score = 100;
+  if(report.webrtc && report.webrtc.leaked) score -= 40;
+  if(!report.dns || !report.dns.ok) score -= 10;
+  if(report.adBlock) score -= 5;
+  if(report.vpn && report.vpn.likely) score -= 10;
+  if(!report.firewall) score -= 5;
+  if(score < 0) score = 0;
+  report.score = score;
+  report.overall = score >= 80 ? 'מוגן' : score >= 50 ? 'בינוני' : 'פגיע';
+  el('fullOutput').textContent = JSON.stringify(report, null, 2);
+  window.fullReport = report;
+  setText('statusOverview', `בדיקה מלאה הושלמה — מצב: ${report.overall} (${report.score}%)`);
+}
+
+/* ===== Network & info helpers ===== */
+async function getPublicIP(){
+  // try ipify IPv6 first, fallback to ipify IPv4
+  const urls = ['https://api64.ipify.org?format=json','https://api.ipify.org?format=json'];
+  for(const u of urls){
+    try{
+      const r = await fetch(u, {cache:'no-store'}); if(r.ok){ const j = await r.json(); if(j.ip) return j.ip; }
+    }catch(e){}
+  }
+  throw new Error('לא ניתן לשחזר IP ציבורי');
+}
+async function getIPDetails(ip){
+  if(!ip) throw new Error('ip missing');
+  // try ipapi.co then ipwhois.app
+  try{
+    const r = await fetch(`https://ipapi.co/${ip}/json/`);
+    if(r.ok) return await r.json();
+  }catch(e){}
+  try{
+    const r2 = await fetch(`https://ipwhois.app/json/${ip}`);
+    if(r2.ok) return await r2.json();
+  }catch(e){}
+  return null;
+}
+
+/* WebRTC ICE check */
+function checkWebRTCIce(timeout=4500){
+  return new Promise((resolve)=>{
+    const ips = new Set();
+    const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    if(!RTCPeerConnection) return resolve({supported:false,leaked:false,ips:[]});
+    const pc = new RTCPeerConnection({iceServers:[]});
+    try{ pc.createDataChannel('cs'); }catch(e){}
+    pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>{});
+    pc.onicecandidate = (e)=>{
+      if(!e || !e.candidate){
+        try{ pc.close(); }catch(e){}
+        return resolve({supported:true,leaked:ips.size>0,ips:Array.from(ips)});
+      }
+      const cand = e.candidate.candidate || '';
+      const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})|([0-9a-fA-F:]{2,})/g;
+      let m;
+      while((m = ipRegex.exec(cand)) !== null){
+        const found = m[0];
+        if(found && found !== '0.0.0.0') ips.add(found);
+      }
+    };
+    setTimeout(()=>{ try{pc.close()}catch(e){}; resolve({supported:true,leaked:ips.size>0,ips:Array.from(ips)}); }, timeout);
+  });
+}
+
+/* DNS heuristic */
+async function checkDNSLeak(){
+  // try Cloudflare trace
+  try{
+    const r = await fetch('https://1.1.1.1/cdn-cgi/trace',{cache:'no-store'}); if(r.ok){
+      const txt = await r.text(); return {ok:true,source:'cloudflare',raw:txt};
+    }
+  }catch(e){}
+  try{
+    const r2 = await fetch('https://ipapi.co/json/'); if(r2.ok){ const j = await r2.json(); return {ok:true,source:'ipapi',json:j}; }
+  }catch(e){}
+  return {ok:false};
+}
+
+/* Fingerprint / WebGL / Permissions / AdBlock / Trackers / Firewall heuristics */
+function getFingerprint(){
+  const nav = navigator;
+  let canvasHash = null;
+  try{
+    const c = document.createElement('canvas'); c.width=200; c.height=40;
+    const ctx = c.getContext('2d'); ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillStyle='#f60';
+    ctx.fillText('CyberScanPro',2,2); canvasHash = c.toDataURL().slice(0,80);
+  }catch(e){}
+  return {
+    userAgent: nav.userAgent,
+    platform: nav.platform,
+    languages: nav.languages,
+    cores: nav.hardwareConcurrency,
+    screen: {width: screen.width, height: screen.height, colorDepth: screen.colorDepth},
+    canvasHash,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  };
+}
+function getWebGLInfo(){
+  try{
+    const c=document.createElement('canvas'); const gl = c.getContext('webgl')||c.getContext('experimental-webgl'); if(!gl) return null;
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info'); return {
+      vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+      renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)
+    };
+  }catch(e){ return null; }
+}
+async function checkPermissions(){
+  const perms = ['geolocation','camera','microphone','notifications','persistent-storage'];
+  const out = {};
+  if(!navigator.permissions) return out;
+  for(const p of perms){
+    try{ const s = await navigator.permissions.query({name:p}); out[p]=s.state; }catch(e){ out[p]='unknown'; }
+  }
+  return out;
+}
+async function detectAdBlock(){
+  return new Promise(resolve=>{
+    const bait = document.createElement('div'); bait.className='adsbox'; bait.style.width='1px'; bait.style.height='1px'; bait.style.position='absolute'; bait.style.left='-9999px';
+    document.body.appendChild(bait);
+    setTimeout(()=>{ const blocked = (getComputedStyle(bait).display==='none' || bait.offsetParent===null || bait.clientHeight===0); document.body.removeChild(bait); resolve(blocked); },150);
+  });
+}
+async function detectTrackers(){
+  const trackers = ['https://www.google-analytics.com/analytics.js','https://connect.facebook.net/en_US/fbevents.js','https://static.hotjar.com/c/hotjar-'];
+  const found = [];
+  for(const t of trackers){
+    try{
+      await new Promise((res,rej)=>{
+        const img = new Image(); let done=false;
+        img.onload = ()=>{ if(!done){ done=true; res(true); } };
+        img.onerror = ()=>{ if(!done){ done=true; rej(false); } };
+        setTimeout(()=>{ if(!done){ done=true; rej(false); } },2500);
+        img.src = t + '?r=' + Math.random();
+      });
+      found.push(t);
+    }catch(e){}
+  }
+  return found;
+}
+async function firewallHeuristic(){
+  const urls = ['https://api.ipify.org?format=json','https://ipapi.co/json/','https://1.1.1.1/cdn-cgi/trace'];
+  let ok=0;
+  for(const u of urls){
+    try{ const r = await fetch(u, {mode:'cors'}); if(r && r.ok) ok++; }catch(e){}
+  }
+  return ok>=2;
+}
+function detectVPNorProxy(details, rdap){
+  const suspect = ['vpn','proxy','cloud','amazon','google','microsoft','digitalocean','ovh','linode','hetzner','vps','hosting','aws','azure','aliyun','cloudflare'];
+  let score=0; let joined='';
+  if(details){ if(details.org) joined += details.org.toLowerCase(); if(details.isp) joined += details.isp.toLowerCase(); }
+  if(rdap){ if(rdap.name) joined += String(rdap.name).toLowerCase(); }
+  suspect.forEach(w=>{ if(joined.includes(w)) score++; });
+  if(joined.includes('tor')) score+=2;
+  return {likely: score>=2, score, raw: joined || '—'};
+}
+
+/* ===== Sandbox runner ===== */
+function runSandbox(){
+  const code = el('sandboxCode').value || '';
+  const cleaned = code.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,'');
+  el('sandboxFrame').srcdoc = cleaned;
+}
+
+/* ===== Support (mail via mailto + local storage ticket demo) ===== */
+function sendTicket(){
+  const name = el('supName').value.trim(), email = el('supEmail').value.trim(), msg = el('supMsg').value.trim();
+  if(!name||!email||!msg){ alert('מלא שם, אימייל והודעה'); return; }
+  // open mail client via mailto
+  const subject = encodeURIComponent('פנייה מ‑CyberScanPro ('+name+')');
+  const body = encodeURIComponent(`שם: ${name}\nאימייל: ${email}\n\n${msg}`);
+  window.location.href = `mailto:hacker.david.7642@gmail.com?subject=${subject}&body=${body}`;
+}
+function saveTicketLocal(){
+  const name = el('supName').value.trim(), email = el('supEmail').value.trim(), msg = el('supMsg').value.trim();
+  const inbox = JSON.parse(localStorage.getItem('cyberscan_inbox')||'[]');
+  inbox.unshift({id:Date.now(),name,email,msg,created:new Date().toISOString(),status:'draft'});
+  localStorage.setItem('cyberscan_inbox', JSON.stringify(inbox));
+  alert('הטיקט נשמר מקומית (דמו)');
+}
+
+/* ===== Chat (local demo) ===== */
+function sendChat(){
+  const txt = el('chatInput').value.trim(); if(!txt) return;
+  const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]');
+  chat.push({from:'visitor',text:txt,ts:Date.now()});
+  localStorage.setItem('cyberscan_chat', JSON.stringify(chat));
+  el('chatInput').value='';
+  renderChat();
+}
+function renderChat(){
+  const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]');
+  const container = el('chat'); container.innerHTML='';
+  if(!chat.length){ container.textContent='אין הודעות'; return; }
+  chat.slice(-100).forEach(m=>{
+    const d = document.createElement('div'); d.style.marginBottom='8px';
+    d.innerHTML = `<div style="font-size:13px"><strong>${escapeHtml(m.from)}</strong> <span class="small">${new Date(m.ts).toLocaleString()}</span></div><div>${escapeHtml(m.text)}</div>`;
+    container.appendChild(d);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ===== Cookie modal (granular) ===== */
+function showCookieModal(){
+  const modal = document.createElement('div'); modal.style.position='fixed'; modal.style.left='12%'; modal.style.right='12%'; modal.style.top='12%'; modal.style.bottom='12%'; modal.style.background='var(--panel)'; modal.style.padding='12px'; modal.style.overflow='auto'; modal.style.borderRadius='8px';
+  modal.innerHTML = `<h3>בחירת עוגיות</h3>
+    <div><label><input type="checkbox" id="ck_func" checked disabled> פונקציונליות (נדרשת)</label></div>
+    <div><label><input type="checkbox" id="ck_anal"> אנליטיקס</label></div>
+    <div><label><input type="checkbox" id="ck_ads"> פרסום</label></div>
+    <div style="margin-top:10px"><button id="ck_save" class="primary">שמור</button> <button id="ck_cancel" class="ghost">ביטול</button></div>`;
+  document.body.appendChild(modal);
+  el('ck_save').addEventListener('click', ()=>{ const cfg={func:true,anal:el('ck_anal').checked,ads:el('ck_ads').checked}; localStorage.setItem('cyberscan_cookie', JSON.stringify(cfg)); modal.remove(); el('cookieBanner').style.display='none'; alert('העדפות נשמרו'); });
+  el('ck_cancel').addEventListener('click', ()=>modal.remove());
+}
+
+/* ===== Misc helpers for language/theme ===== */
+function changeLang(code){
+  const t = TRANSLATIONS[code] || TRANSLATIONS['he'];
+  document.documentElement.dir = t.dir || 'ltr';
+  // Minimal UI change - in full i18n would replace all strings
+  setText('pageTitle', t.dashboard || 'לוח בקרה');
+}
+el('themeBtn')?.addEventListener('click', ()=>{ document.body.classList.toggle('light'); el('themeBtn').textContent = document.body.classList.contains('light')? 'Dark':'Light'; });
+
+/* ===== On load render chat & maybe show cookie banner ===== */
+document.addEventListener('DOMContentLoaded', ()=>{ renderChat(); if(!localStorage.getItem('cyberscan_cookie')) el('cookieBanner').style.display='flex'; });
+
+</script>
 </body>
 </html>
