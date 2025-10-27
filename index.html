@@ -1,207 +1,238 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>בדיקת אבטחה פרו | Cyber Scan Pro</title>
-<meta name="description" content="בדיקת אבטחה פרו — בדיקות IP, WebRTC, DNS, Fingerprint ועוד.">
-<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>בדיקת אבטחה פרו — Cyber Scan Pro</title>
+<meta name="description" content="Cyber Scan Pro — בדיקות IP, WebRTC, DNS, Fingerprint ועוד. רץ בדפדפן בלבד." />
+<meta name="robots" content="noindex, nofollow" />
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src *; img-src 'self' data: https:;">
+<!-- בסיס CSP - אם תשנה endpoints בצד-שרת עדכן CSP -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https:; connect-src *; img-src 'self' data: https:;">
+
+<!-- אופציונלי: ספריות לייצוא PDF (ניתן להסיר אם לא רוצים CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <style>
 :root{
-  --bg:#07060a; --panel:#0f0f12; --accent:#ff3b3b; --accent2:#ff7b7b; --muted:#9aa3ad; --text:#e8eef6;
-  --card-radius:12px; --maxw:1200px;
+  --bg:#07060a; --panel:#0f0f12; --card:#0b0b0d; --accent:#ff3b3b; --accent2:#ff7b7b; --muted:#9aa3ad; --text:#e8eef6;
+  --radius:12px; --maxw:1100px;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,#050406,#0b0b0d);color:var(--text);-webkit-font-smoothing:antialiased}
-.container{max-width:var(--maxw);margin:16px auto;padding:12px}
+.container{max-width:var(--maxw);margin:12px auto;padding:12px}
 .header{display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:12px}
 .logo svg{width:56px;height:56px}
 .title{font-weight:800;font-size:18px}
 .subtitle{color:var(--muted);font-size:13px}
-.left-controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+.controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* top bar */
 .lang-select{padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
 .theme-btn{padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text);cursor:pointer}
-.mode-row{display:flex;gap:8px;justify-content:center;margin-top:14px}
+
+/* modes */
+.mode-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .mode-btn{padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
 .mode-normal{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
 .mode-expert{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#070606}
 
-.main-grid{display:grid;grid-template-columns:320px 1fr 360px;gap:16px;margin-top:14px}
-@media (max-width:1100px){.main-grid{grid-template-columns:1fr}.sidebar{order:2}.right-panel{order:3}}
+/* layout */
+.main-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media(min-width:960px){ .main-grid{grid-template-columns:1fr 380px} }
 
-.sidebar{background:var(--panel);padding:12px;border-radius:var(--card-radius);height:calc(100vh - 160px);overflow:auto;position:sticky;top:12px}
-.hamburger{display:flex;justify-content:flex-end}
-.hamburger button{background:transparent;border:none;color:var(--text);font-size:22px;cursor:pointer}
-.menu{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.menu button{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--text);cursor:pointer}
-
-.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:14px;border-radius:var(--card-radius);min-height:480px}
+/* center panel */
+.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:14px;border-radius:var(--radius);min-height:520px}
 .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;margin-bottom:12px}
 .small{color:var(--muted);font-size:13px}
 .pre{background:#070708;padding:10px;border-radius:8px;overflow:auto;white-space:pre-wrap;font-family:monospace;color:var(--text)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-.right-panel{padding:12px;border-radius:var(--card-radius);height:calc(100vh - 160px);overflow:auto;position:sticky;top:12px;background:var(--panel)}
-.chat-window{background:#070708;padding:8px;border-radius:8px;height:280px;overflow:auto;color:var(--text)}
-.input{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)}
+/* sidebar panel (hidden by default on mobile) - slides in from left and covers 50% */
+.sidebar-drawer{position:fixed;left:0;top:0;bottom:0;width:50%;max-width:520px;background:var(--panel);z-index:60;padding:16px;transform:translateX(-110%);transition:transform .28s ease;box-shadow:8px 0 40px rgba(0,0,0,0.7);overflow:auto}
+.sidebar-drawer.open{transform:translateX(0)}
+.drawer-close{position:absolute;right:12px;top:12px;background:transparent;border:none;color:var(--text);font-size:20px;cursor:pointer}
 
-.cookie-banner{position:fixed;left:16px;right:16px;bottom:16px;background:#0b0b0d;padding:12px;border-radius:10px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
-.footer{margin-top:16px;color:var(--muted);font-size:13px;text-align:center}
+/* hamburger button top-right */
+.hamburger{margin-left:12px;margin-right:0;display:inline-block}
+.hamburger button{background:transparent;border:none;color:var(--text);font-size:22px;cursor:pointer}
 
-.hidden{display:none}
+/* right column (results) */
+.results{background:var(--card);padding:12px;border-radius:10px}
+.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);margin-bottom:8px}
+.result-key{color:var(--muted);width:40%}
+.result-val{width:60%;word-break:break-word}
+
+/* chat */
+.chat-window{background:#070708;padding:8px;border-radius:8px;height:220px;overflow:auto;color:var(--text);margin-bottom:8px}
+
+/* cookie banner */
+.cookie-banner{position:fixed;left:16px;right:16px;bottom:16px;background:#0b0b0d;padding:12px;border-radius:10px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,0.6);z-index:70}
+.cookie-banner .muted{color:var(--muted)}
+.cookie-banner button{padding:8px;border-radius:8px;border:none;cursor:pointer}
+
+/* responsive tweaks */
+@media(max-width:520px){
+ .sidebar-drawer{width:86%}
+ .result-key{display:block;width:100%}
+ .result-val{width:100%}
+ .grid-2{grid-template-columns:1fr}
+ .mode-row{flex-direction:column}
+}
+
+/* small helpers */
 .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#070606;border:none;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700}
 .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
 .badge{background:rgba(255,255,255,0.03);padding:2px 8px;border-radius:8px;font-size:12px;color:var(--muted)}
+.hidden{display:none}
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header" role="banner">
+  <div class="container" id="app">
+    <header class="header" role="banner">
       <div class="logo" aria-hidden="false">
-        <!-- shield + text -->
         <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#ff3b3b"/><stop offset="1" stop-color="#ff7b7b"/></linearGradient></defs>
           <path d="M64 8c0 0 36 8 44 28 8 20 4 44 4 44s-20 24-48 40C36 108 16 84 16 84s-4-24 4-44C28 16 64 8 64 8z" fill="url(#g1)"/>
           <circle cx="64" cy="60" r="10" fill="#060608"/>
         </svg>
       </div>
+
       <div>
         <div class="title">בדיקת אבטחה פרו</div>
-        <div class="subtitle">Cyber Scan Pro — בדיקות אמיתיות בדפדפן</div>
+        <div class="subtitle">Cyber Scan Pro — בדיקות אמיתיות לצורך אבטחה</div>
       </div>
 
-      <div class="left-controls" role="region" aria-label="controls">
-        <select id="langSelect" class="lang-select" aria-label="בחירת שפה"></select>
+      <div class="controls" role="region" aria-label="Controls">
+        <select id="langSelect" class="lang-select" aria-label="בחר שפה"></select>
         <button id="themeBtn" class="theme-btn" aria-pressed="false">Light</button>
+        <span class="hamburger"><button id="hamburgerBtn" title="תפריט">☰</button></span>
       </div>
-    </div>
+    </header>
 
     <div class="mode-row" role="tablist" aria-label="modes">
       <button id="normalMode" class="mode-btn mode-normal" aria-pressed="true">מצב רגיל</button>
       <button id="expertMode" class="mode-btn mode-expert" aria-pressed="false">מצב מומחה</button>
     </div>
 
-    <div class="main-grid">
-      <!-- Sidebar (on right visually by dir=rtl) -->
-      <aside class="sidebar" role="navigation" aria-label="תפריט צדדי">
-        <div class="hamburger" style="justify-content:flex-start">
-          <button id="hambBtn" aria-label="פתח תפריט">☰</button>
-        </div>
+    <!-- Sidebar drawer (slides in from left, covers half screen) -->
+    <aside id="sidebarDrawer" class="sidebar-drawer" aria-hidden="true">
+      <button class="drawer-close" id="drawerClose" title="סגור">✕</button>
+      <h3>תפריט והגדרות</h3>
+      <div class="small">כאן אפשר למצוא: תמיכה, הגדרות, דו"חות, חסימת מדינות ועוד.</div>
 
-        <div class="menu" role="menu" id="sideMenu">
-          <button data-action="dashboard">לוח בקרה <span class="badge">Home</span></button>
-          <button data-action="quick">בדיקה מהירה</button>
-          <button data-action="full">מצב מומחה (Full)</button>
-          <button data-action="sandbox">סקריפט בלייב</button>
-          <button data-action="support">תמיכה / פנייה</button>
-          <button data-action="reports">דו"חות</button>
-          <button data-action="settings">הגדרות</button>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+      <div>
+        <h4>תפריטים</h4>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+          <button data-drawer="dashboard" class="btn-ghost drawer-btn">לוח בקרה</button>
+          <button data-drawer="quick" class="btn-ghost drawer-btn">בדיקה מהירה</button>
+          <button data-drawer="full" class="btn-ghost drawer-btn">מצב מומחה</button>
+          <button data-drawer="sandbox" class="btn-ghost drawer-btn">סקריפט בלייב</button>
+          <button data-drawer="support" class="btn-ghost drawer-btn">תמיכה / פנייה</button>
+          <button data-drawer="reports" class="btn-ghost drawer-btn">דו"חות</button>
+          <button data-drawer="settings" class="btn-ghost drawer-btn">הגדרות</button>
         </div>
+      </div>
 
-        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
-        <div class="small">כלים מהירים</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-          <button id="btnIP" class="btn-ghost">בדיקת IP</button>
-          <button id="btnWebRTC" class="btn-ghost">בדיקת WebRTC</button>
-          <button id="btnDNS" class="btn-ghost">בדיקת DNS</button>
-        </div>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
 
-        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
-        <div class="small">חסימת מדינות (UI בלבד)</div>
+      <div>
+        <h4>חסימת מדינות (UI בלבד)</h4>
+        <div class="small">חסימה אמיתית חייבת להתבצע בצד-שרת.</div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
           <label><input type="checkbox" class="block-country" value="SY"> סוריה</label>
           <label><input type="checkbox" class="block-country" value="IR"> איראן</label>
           <label><input type="checkbox" class="block-country" value="LB"> לבנון</label>
           <label><input type="checkbox" class="block-country" value="JO"> ירדן</label>
         </div>
-      </aside>
+      </div>
 
-      <!-- Center -->
-      <section class="panel" id="centerPanel" role="main">
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+      <div>
+        <h4>עוד</h4>
+        <div class="small">הוראות לחיבור backend, GDPR/Cookie guidance ועוד.</div>
+      </div>
+    </aside>
+
+    <main class="main-grid">
+      <section class="panel" id="center">
         <h2 id="pageTitle">לוח בקרה</h2>
-        <div class="small" id="pageSubtitle">השתמש ב"מצב מומחה" כדי להריץ בדיקות מתקדמות — כל הריצה בדפדפן בלבד.</div>
+        <div class="small" id="pageSubtitle">בחר מצב והרץ בדיקה — התוצאות יוצגו בשורות קריאות.</div>
 
+        <!-- views -->
         <div id="views" style="margin-top:12px">
-          <!-- Dashboard view -->
+          <!-- dashboard -->
           <div id="dashboardView">
             <div class="card">
               <h3>בדיקה מהירה</h3>
-              <div class="small">IP ציבורי, דליפות WebRTC וקצה מהיר.</div>
-              <div style="margin-top:8px">
+              <div class="small">IP ציבורי, דליפות WebRTC בסיסיות ו-fingerprint.</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
                 <button id="startQuick" class="btn-primary">התחל בדיקה מהירה</button>
                 <button id="downloadQuick" class="btn-ghost">הורד דוח (JSON)</button>
+                <button id="exportPdfQuick" class="btn-ghost">ייצא PDF</button>
               </div>
-              <div style="margin-top:12px"><pre id="quickOutput" class="pre">טרם בוצעה בדיקה מהירה</pre></div>
-            </div>
-
-            <div class="card">
-              <h3>סטטוס מהיר</h3>
-              <div id="quickStatus" class="small">ממתין לפעולה...</div>
+              <div style="margin-top:12px" id="quickResults" class="results"></div>
             </div>
           </div>
 
-          <!-- Full/expert view -->
+          <!-- full/expert -->
           <div id="fullView" class="hidden">
             <div class="card">
               <h3>מצב מומחה — בדיקה מלאה</h3>
-              <div class="small">הרץ בדיקה מלאה כדי לקבל פרטים על ISP, מיקום, RDAP (במידת האפשר), DNS, fingerprint ועוד.</div>
-              <div style="margin-top:8px">
+              <div class="small">הרץ בדיקה מלאה לקבלת כל המידע שהדפדפן מאפשר.</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
                 <button id="runFull" class="btn-primary">הרץ בדיקה מלאה</button>
                 <button id="downloadFull" class="btn-ghost">הורד דוח מלא (JSON)</button>
+                <button id="exportPdfFull" class="btn-ghost">ייצא PDF</button>
               </div>
-              <div style="margin-top:12px"><pre id="fullOutput" class="pre">טרם ריצה מלאה</pre></div>
+              <div style="margin-top:12px" id="fullResults" class="results"></div>
             </div>
           </div>
 
-          <!-- Sandbox -->
+          <!-- sandbox -->
           <div id="sandboxView" class="hidden">
             <div class="card">
               <h3>סקריפט בלייב — סנדבוקס</h3>
-              <div class="small">הרצה בתוך iframe מבודד — אין גישה ל-cookie או ל-parent.</div>
-              <textarea id="sandboxCode" style="width:100%;height:140px;margin-top:8px;background:#070708;color:var(--text);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)">&lt;div style="padding:12px;color:#fff"&gt;Hello sandbox&lt;/div&gt;</textarea>
+              <div class="small">הרצת HTML/JS בתוך iframe מבודד (script tags מוסרות).</div>
+              <textarea id="sandboxCode" style="width:100%;height:120px;margin-top:8px;background:#070708;color:var(--text);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)">&lt;div style="padding:12px;color:#fff"&gt;Hello sandbox&lt;/div&gt;</textarea>
               <div style="margin-top:8px"><button id="runSandboxBtn" class="btn-primary">הרץ בסנדבוקס</button></div>
               <iframe id="sandboxFrame" style="width:100%;height:220px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)" sandbox="allow-scripts"></iframe>
             </div>
           </div>
 
-          <!-- Support -->
+          <!-- support -->
           <div id="supportView" class="hidden">
             <div class="card">
               <h3>תמיכה / פנייה</h3>
-              <div class="small">שלח מייל דרך mailto או שמור פנייה מקומית (דמו).</div>
-              <label>שם</label><input id="supName" class="input" type="text" placeholder="שמך">
-              <label>אימייל</label><input id="supEmail" class="input" type="email" placeholder="you@mail.com">
-              <label>הודעה</label><textarea id="supMsg" class="input" rows="5" placeholder="תאר את הבעיה"></textarea>
+              <div class="small">שלח מייל (mailto) או שמור פנייה מקומית (דמו).</div>
+              <label>שם</label><input id="supName" class="input" type="text" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)" placeholder="שמך">
+              <label>אימייל</label><input id="supEmail" class="input" type="email" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)" placeholder="you@mail.com">
+              <label>הודעה</label><textarea id="supMsg" class="input" rows="4" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)"></textarea>
               <div style="margin-top:8px;display:flex;gap:8px">
                 <button id="sendMailBtn" class="btn-primary">שלח מייל</button>
-                <button id="saveDraftBtn" class="btn-ghost">שמור כסקיצה (דמו)</button>
+                <button id="saveDraftBtn" class="btn-ghost">שמור כטיוטה (דמו)</button>
               </div>
             </div>
           </div>
 
-          <div id="reportsView" class="hidden">
-            <div class="card"><h3>דו"חות</h3><div id="reportsList" class="small">אין דו"חות שמורים מקומיים</div></div>
-          </div>
+          <!-- reports & settings placeholders -->
+          <div id="reportsView" class="hidden"><div class="card"><h3>דו"חות</h3><div id="reportsList" class="small">אין דו"חות מקומיים</div></div></div>
+          <div id="settingsView" class="hidden"><div class="card"><h3>הגדרות</h3><div class="small">ברירות שפה, התראות ועוד.</div></div></div>
 
-          <div id="settingsView" class="hidden">
-            <div class="card"><h3>הגדרות</h3>
-              <div class="small">ברירת שפה, התראות, והוראות לחיבור backend.</div>
-            </div>
-          </div>
         </div>
       </section>
 
-      <!-- Right panel -->
-      <aside class="right-panel" role="complementary" aria-label="תמיכה">
+      <!-- results / right column -->
+      <aside class="panel" id="rightPanel">
         <div class="card">
           <h3>צ'אט מהיר (דמו)</h3>
-          <div class="small">צ'אט דמו נשמר ב־localStorage. לחיבור אמיתי דרוש backend/Firebase.</div>
+          <div class="small">שיחה מקומית נשמרת ב־localStorage — לחיבור אמיתי צריך backend.</div>
           <div id="chatWindow" class="chat-window">אין הודעות</div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="chatInput" class="input" type="text" placeholder="הקלד הודעה...">
+            <input id="chatInput" type="text" placeholder="הקלד הודעה..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)">
             <button id="chatSendBtn" class="btn-primary">שלח</button>
           </div>
         </div>
@@ -211,12 +242,12 @@ html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Ro
           <div class="small">© <span id="year"></span> Cyber Scan Pro — אסור להעתיק ללא אישור בכתב. בעלים: דוד. תמיכה: <a href="mailto:hacker.david.7642@gmail.com" style="color:var(--accent)">hacker.david.7642@gmail.com</a></div>
         </div>
       </aside>
-    </div>
+    </main>
 
     <div id="cookieBanner" class="cookie-banner hidden" role="dialog" aria-live="polite">
       <div>
         <strong>Cookie Notice</strong>
-        <div class="small" style="margin-top:6px">אתר זה משתמש בקוקיז כדי לשפר חוויית שימוש. בחר/י מה לאפשר.</div>
+        <div class="small" style="margin-top:6px">אתר זה משתמש בעוגיות כדי לשפר חוויית שימוש. בחר/י מה להפעיל.</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <button id="cookieAllow" class="btn-primary">אשר הכל</button>
@@ -225,70 +256,70 @@ html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Ro
       </div>
     </div>
 
-    <div class="footer">האתר רץ בדפדפן בלבד. לחיבור פיצ'רים מתקדמים — אדריך איך לחבר backend (Firebase/Node).</div>
+    <div class="footer" style="margin-top:12px">הקובץ רץ בצד הלקוח בלבד. לחיבור פיצ'רים מתקדמים אני אתן הדרכה שלב-אחר-שלב.</div>
   </div>
 
 <script>
-/* ========================================================
-   Cyber Scan Pro - Final corrected client-only file
-   - Sidebar on right, language select on left
-   - ~40 unique languages
-   - Expert mode runs full client-side checks and displays detailed info
-   - No duplicate language entries
-   - All code runs after DOMContentLoaded
-   - Placeholders remain for backend-only features (mail storage, real chat)
-   ======================================================== */
+/* Cyber Scan Pro — Single-file client-only app
+   - כל הבדיקות מתבצעות בצד לקוח בלבד (לפי בקשתך)
+   - תפריט צדדי נפתח בלחיצה על ☰ ומכסה חצי מסך
+   - ~50 שפות ללא כפילויות
+   - מצב מומחה מריץ בדיקה מלאה ומציג תוצאות שורתיות
+   - אין eval, אין טעינה של סקריפט חיצוני בלתי מורשה
+*/
 
 const LANGS = [
-  ['he','עברית'],['en','English'],['ar','العربية'],['fr','Français'],['de','Deutsch'],
-  ['es','Español'],['ru','Русский'],['zh','中文'],['ja','日本語'],['ko','한국어'],
-  ['it','Italiano'],['pt','Português'],['hi','हिन्दी'],['bn','বাংলা'],['tr','Türkçe'],
-  ['pl','Polski'],['nl','Nederlands'],['sv','Svenska'],['no','Norsk'],['da','Dansk'],
-  ['fi','Suomi'],['cs','Čeština'],['el','Ελληνικά'],['th','ไทย'],['vi','Tiếng Việt'],
-  ['id','Bahasa Indonesia'],['ro','Română'],['hu','Magyar'],['sk','Slovenčina'],['bg','Български'],
-  ['sr','Српски'],['hr','Hrvatski'],['lt','Lietuvių'],['lv','Latviešu'],['et','Eesti'],
-  ['ms','Bahasa Melayu'],['fa','فارسی'],['ur','اردو'],['ta','தமிழ்'],['he-LAT','Hebrew (Lat)']
+ ['he','עברית'],['en','English'],['ar','العربية'],['fr','Français'],['de','Deutsch'],
+ ['es','Español'],['ru','Русский'],['zh','中文'],['ja','日本語'],['ko','한국어'],
+ ['it','Italiano'],['pt','Português'],['hi','हिन्दी'],['bn','বাংলা'],['tr','Türkçe'],
+ ['pl','Polski'],['nl','Nederlands'],['sv','Svenska'],['no','Norsk'],['da','Dansk'],
+ ['fi','Suomi'],['cs','Češtина'],['el','Ελληνικά'],['th','ไทย'],['vi','Tiếng Việt'],
+ ['id','Bahasa Indonesia'],['ro','Română'],['hu','Magyar'],['sk','Slovenčina'],['bg','Български'],
+ ['sr','Српски'],['hr','Hrvatski'],['lt','Lietuvių'],['lv','Latviešu'],['et','Eesti'],
+ ['ms','Bahasa Melayu'],['fa','فارسی'],['ur','اردو'],['ta','தமிழ்'],['he-LAT','Hebrew (Lat)'],
+ ['mk','Македонски'],['sq','Shqip'],['hy','Հայերեն'],['iw','עברית-IL'],['am','አማርኛ']
 ];
 
 const el = id => document.getElementById(id);
-function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-document.addEventListener('DOMContentLoaded', ()=> {
-  // populate languages (no duplicates)
-  const langSelect = el('langSelect');
+document.addEventListener('DOMContentLoaded', () => {
+  // populate language select
+  const ls = el('langSelect');
+  const seen = new Set();
   LANGS.forEach(([code,name])=>{
-    const o = document.createElement('option'); o.value = code; o.textContent = name; if(code==='he') o.selected=true;
-    langSelect.appendChild(o);
+    if(seen.has(name)) return; seen.add(name);
+    const o = document.createElement('option'); o.value=code; o.textContent = name; if(code==='he') o.selected=true;
+    ls.appendChild(o);
   });
 
-  // year
   el('year').textContent = new Date().getFullYear();
 
-  // menu buttons
-  document.querySelectorAll('.menu button').forEach(b => b.addEventListener('click', ()=>handleMenu(b.dataset.action)));
+  // drawer/hamburger
+  const drawer = el('sidebarDrawer');
+  el('hamburgerBtn').addEventListener('click', ()=>{ drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false'); });
+  el('drawerClose').addEventListener('click', ()=>{ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); });
+  document.querySelectorAll('.drawer-btn').forEach(b=> b.addEventListener('click', ()=>{
+    const d = b.dataset.drawer;
+    handleMenu(d);
+    drawer.classList.remove('open');
+  }));
 
   // mode buttons
-  el('normalMode').addEventListener('click', ()=>{ setMode('normal'); });
-  el('expertMode').addEventListener('click', ()=>{ setMode('expert'); });
+  el('normalMode').addEventListener('click', ()=>setMode('normal'));
+  el('expertMode').addEventListener('click', ()=>setMode('expert'));
 
-  // quick actions
+  // navigation quick actions
   el('startQuick').addEventListener('click', runQuickScan);
   el('downloadQuick').addEventListener('click', ()=>downloadJSON(window.quickReport,'quick-report'));
+  el('exportPdfQuick').addEventListener('click', ()=>exportAreaPDF(el('quickResults'),'quick-report'));
   el('runFull').addEventListener('click', runFullScan);
   el('downloadFull').addEventListener('click', ()=>downloadJSON(window.fullReport,'full-report'));
-
+  el('exportPdfFull').addEventListener('click', ()=>exportAreaPDF(el('fullResults'),'full-report'));
   el('runSandboxBtn').addEventListener('click', runSandbox);
-  el('btnIP').addEventListener('click', runQuickScan);
-  el('btnWebRTC').addEventListener('click', ()=>checkWebRTCIce().then(r=>alert(r.leaked?('דליפת IPs: '+r.ips.join(',')):'לא נצפתה דליפה')));
-  el('btnDNS').addEventListener('click', ()=>checkDNSLeak().then(r=>alert(r.ok?('נמצא: '+r.source):'לא זוהה')));
-
-  // support
   el('sendMailBtn').addEventListener('click', sendSupportMail);
   el('saveDraftBtn').addEventListener('click', saveTicketLocal);
-
-  // chat
   el('chatSendBtn').addEventListener('click', sendChat);
-  renderChat();
 
   // cookie
   if(!localStorage.getItem('cyberscan_cookie')) el('cookieBanner').classList.remove('hidden');
@@ -296,18 +327,20 @@ document.addEventListener('DOMContentLoaded', ()=> {
   el('cookieDeny').addEventListener('click', ()=>{ localStorage.setItem('cyberscan_cookie','none'); el('cookieBanner').classList.add('hidden'); });
   el('cookieChoose').addEventListener('click', showCookieModal);
 
-  // hamburger toggle (visual)
-  el('hambBtn').addEventListener('click', ()=>{ document.querySelector('.sidebar').classList.toggle('hidden'); });
+  // quick btns in drawer
+  el('btnIP')?.addEventListener('click', runQuickScan);
+  el('btnWebRTC')?.addEventListener('click', ()=>checkWebRTCIce().then(r=>alert(r.leaked?('דליפת IPs: '+r.ips.join(',')):'לא נצפתה דליפה')));
+  el('btnDNS')?.addEventListener('click', ()=>checkDNSLeak().then(r=>alert(r.ok?('נמצא: '+r.source):'לא זוהה')));
 
-  // theme
-  el('themeBtn').addEventListener('click', ()=>{ document.body.classList.toggle('light'); el('themeBtn').textContent = document.body.classList.contains('light')? 'Dark':'Light'; });
+  // render chat
+  renderChat();
 
-  // default mode and view
+  // default
   setMode('normal');
   handleMenu('dashboard');
 });
 
-// menu routing
+/* Menu handling */
 function handleMenu(action){
   ['dashboardView','fullView','sandboxView','supportView','reportsView','settingsView'].forEach(id=>{ if(el(id)) el(id).classList.add('hidden'); });
   switch(action){
@@ -324,65 +357,150 @@ function handleMenu(action){
 }
 function setText(id,txt){ if(el(id)) el(id).textContent = txt; }
 
-// JSON download
-function downloadJSON(obj,name='report'){
+/* Mode */
+function setMode(m){
+  const normalBtn = el('normalMode'), expertBtn = el('expertMode');
+  if(m==='expert'){
+    normalBtn.classList.remove('mode-expert'); normalBtn.classList.add('mode-normal'); normalBtn.setAttribute('aria-pressed','false');
+    expertBtn.classList.add('mode-expert'); expertBtn.setAttribute('aria-pressed','true');
+    handleMenu('full');
+    // automatically start full scan for convenience
+    runFullScan();
+  } else {
+    expertBtn.classList.remove('mode-expert'); expertBtn.classList.add('mode-normal'); expertBtn.setAttribute('aria-pressed','false');
+    normalBtn.classList.add('mode-normal'); normalBtn.setAttribute('aria-pressed','true');
+    handleMenu('dashboard');
+  }
+}
+
+/* ===== Helpers: download JSON & export PDF ===== */
+function downloadJSON(obj, name='report'){
   if(!obj){ alert('אין דוח להורדה'); return; }
-  const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download = `${name}_${new Date().toISOString().replace(/[:.]/g,'-')}.json`; a.click();
   URL.revokeObjectURL(url);
 }
+async function exportAreaPDF(node, name='report'){
+  try{
+    if(!node){ alert('אזור לייצוא לא נמצא'); return; }
+    const canvas = await html2canvas(node, {scale:1.5});
+    const img = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'px', format:[canvas.width, canvas.height]});
+    pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save(`${name}_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`);
+  }catch(e){
+    alert('שגיאה ביצוא PDF: ' + e.message);
+  }
+}
 
-/* ===== Quick scan (client-side) ===== */
+/* ===== Quick scan (client-only) - show row-format results ===== */
 async function runQuickScan(){
-  el('quickOutput').textContent = 'מריץ בדיקה מהירה...';
+  const out = el('quickResults'); out.innerHTML = ''; appendRow(out,'סטטוס','מריץ בדיקה מהירה...');
   const report = {generatedAt:new Date().toISOString()};
-  try{ report.publicIP = await getPublicIP(); } catch(e){ report.publicIP = null; }
-  try{ report.webrtc = await checkWebRTCIce(); } catch(e){ report.webrtc = {supported:false,leaked:false,ips:[]}; }
-  try{ report.fingerprint = getFingerprint(); } catch(e){}
+  try{ report.publicIP = await getPublicIP(); appendRow(out,'IP ציבורי', report.publicIP); } catch(e){ appendRow(out,'IP ציבורי','לא זוהה'); report.publicIP = null; }
+  try{
+    const rtc = await checkWebRTCIce(); report.webrtc = rtc;
+    appendRow(out,'WebRTC (דליפה)', rtc.leaked ? rtc.ips.join(', ') : 'לא נצפתה');
+  }catch(e){ appendRow(out,'WebRTC','לא נתמך'); }
+  try{ const fp = getFingerprint(); report.fingerprint = fp; appendRow(out,'מערכת / דפדפן', `${fp.os} — ${fp.userAgent.split(')')[0] || fp.userAgent}`); }catch(e){}
   window.quickReport = report;
-  el('quickOutput').textContent = JSON.stringify(report,null,2);
-  setText('quickStatus','בדיקה מהירה הושלמה.');
+  appendRow(out,'זמן יצירה', new Date(report.generatedAt).toLocaleString());
 }
 
-/* ===== Full scan (expert) ===== */
+/* ===== Full scan (expert) - many client-side checks, formatted rows ===== */
 async function runFullScan(){
-  el('fullOutput').textContent = 'מתחיל בדיקה מלאה — נא להמתין...';
+  const out = el('fullResults'); out.innerHTML = ''; appendRow(out,'סטטוס','מתחיל בדיקה מלאה — נא להמתין...');
   const report = {generatedAt:new Date().toISOString()};
-  try{ report.publicIP = await getPublicIP(); }catch(e){ report.publicIP = null; }
-  try{ if(report.publicIP) report.ipDetails = await getIPDetails(report.publicIP); }catch(e){}
-  try{ report.webrtc = await checkWebRTCIce(); }catch(e){ report.webrtc={supported:false,leaked:false,ips:[]}; }
-  try{ report.dns = await checkDNSLeak(); }catch(e){}
-  try{ report.fingerprint = getFingerprint(); }catch(e){}
-  try{ report.webgl = getWebGLInfo(); }catch(e){}
-  try{ report.permissions = await checkPermissions(); }catch(e){}
-  try{ report.adBlock = await detectAdBlock(); }catch(e){}
-  try{ report.trackers = await detectTrackers(); }catch(e){}
-  try{ report.firewall = await firewallHeuristic(); }catch(e){}
-  try{ report.vpn = detectVPNorProxy(report.ipDetails || null, null); }catch(e){}
-  // simple score
-  let score=100;
-  if(report.webrtc && report.webrtc.leaked) score-=40;
-  if(!report.dns || !report.dns.ok) score-=10;
-  if(report.adBlock) score-=5;
-  if(report.vpn && report.vpn.likely) score-=10;
-  if(!report.firewall) score-=5;
-  if(score<0) score=0;
-  report.score = score; report.overall = score>=80? 'מוגן': score>=50? 'בינוני':'פגיע';
+  // Public IP
+  try{ report.publicIP = await getPublicIP(); appendRow(out,'IP ציבורי', report.publicIP); } catch(e){ appendRow(out,'IP ציבורי','לא זוהה'); report.publicIP = null; }
+  // IP details (geo/isp) - best-effort via public IP APIs (CORS permitting)
+  try{
+    if(report.publicIP){
+      const details = await getIPDetails(report.publicIP);
+      report.ipDetails = details || null;
+      appendRow(out,'ISP / ארגון', details?.org || details?.asn || 'לא זמין');
+      appendRow(out,'מיקום מקורב', `${details?.city || '-'} ${details?.region || ''} ${details?.country_name || details?.country || ''}`);
+    } else {
+      appendRow(out,'ISP / ארגון','לא זמין');
+      appendRow(out,'מיקום מקורב','לא זמין');
+    }
+  }catch(e){ appendRow(out,'ISP / ארגון','שגיאה בשליפת פרטים'); }
+
+  // RDAP (רק אם מאפשרים - פה best-effort)
+  try{
+    if(report.publicIP){
+      const rdap = await rdapLookup(report.publicIP);
+      report.rdap = rdap || null;
+      appendRow(out,'RDAP (חלקי)', rdap ? (rdap.handle || rdap.name || rdap.entities?.[0]?.handle || '—') : 'לא זמין (חוסר הרשאה/סרבר)');
+    }
+  }catch(e){ appendRow(out,'RDAP','שגיאה'); }
+
+  // WebRTC
+  try{
+    const rtc = await checkWebRTCIce(); report.webrtc = rtc; appendRow(out,'WebRTC (דליפה)', rtc.leaked ? rtc.ips.join(', ') : 'לא נצפתה');
+  }catch(e){ appendRow(out,'WebRTC','לא נתמך'); }
+
+  // DNS heuristic
+  try{
+    const dns = await checkDNSLeak(); report.dns = dns; appendRow(out,'DNS (הערכה)', dns.ok ? dns.source : 'לא ניתן לאמת (CORS או חסימה)');
+  }catch(e){ appendRow(out,'DNS','שגיאה'); }
+
+  // Fingerprint / OS detection
+  try{
+    const fp = getFingerprint(); report.fingerprint = fp; appendRow(out,'מערכת הפעלה', fp.os || fp.platform || 'לא זמין');
+    appendRow(out,'פה / דפדפן', fp.userAgent.split(')')[0] || fp.userAgent);
+  }catch(e){ appendRow(out,'Fingerprint','לא זמין'); }
+
+  // WebGL
+  try{ const webgl = getWebGLInfo(); report.webgl = webgl; appendRow(out,'WebGL', webgl ? `${webgl.vendor || '-'} / ${webgl.renderer || '-'}` : 'לא זמין'); }catch(e){ appendRow(out,'WebGL','שגיאה'); }
+
+  // Permissions
+  try{ const perms = await checkPermissions(); report.permissions = perms; appendRow(out,'הרשאות (מצב)', Object.keys(perms).length ? JSON.stringify(perms) : 'לא נתמך'); }catch(e){ appendRow(out,'הרשאות','לא נתמך'); }
+
+  // AdBlock
+  try{ const ad = await detectAdBlock(); report.adBlock = ad; appendRow(out,'AdBlock זוהה', ad ? 'כן' : 'לא'); }catch(e){ appendRow(out,'AdBlock','שגיאה'); }
+
+  // Trackers
+  try{ const trackers = await detectTrackers(); report.trackers = trackers; appendRow(out,'Trackers (הערכה)', trackers.length ? trackers.join(', ') : 'לא נמצאו סימנים'); }catch(e){ appendRow(out,'Trackers','שגיאה'); }
+
+  // Firewall heuristic
+  try{ const fw = await firewallHeuristic(); report.firewall = fw; appendRow(out,'חומת אש — הערכה', fw ? 'נראה שמאפשר חיבור חיצוני' : 'יתכנו הגבלות חיבורים'); }catch(e){ appendRow(out,'Firewall','שגיאה'); }
+
+  // VPN / Proxy heuristic
+  try{ const vpn = detectVPNorProxy(report.ipDetails || null, report.rdap || null); report.vpn = vpn; appendRow(out,'VPN/Proxy — הערכה', vpn.likely ? `חשוד (${vpn.score}) — ${vpn.raw}` : `לא חשוד (${vpn.score})`); }catch(e){ appendRow(out,'VPN/Proxy','שגיאה'); }
+
+  // final score
+  let score = 100;
+  if(report.webrtc && report.webrtc.leaked) score -= 40;
+  if(!report.dns || !report.dns.ok) score -= 10;
+  if(report.adBlock) score -= 5;
+  if(report.vpn && report.vpn.likely) score -= 10;
+  if(!report.firewall) score -= 5;
+  if(score < 0) score = 0;
+  report.score = score; report.overall = score >= 80 ? 'מוגן' : score >= 50 ? 'בינוני' : 'פגיע';
+  appendRow(out,'מצב כללי', `${report.overall} (${report.score}%)`);
   window.fullReport = report;
-  el('fullOutput').textContent = JSON.stringify(report,null,2);
-  setText('statusOverview', `בדיקה מלאה הושלמה — מצב: ${report.overall} (${report.score}%)`);
 }
 
-/* ===== Network helpers ===== */
+/* helper to append readable rows */
+function appendRow(container,key,val){
+  const row = document.createElement('div'); row.className='result-row';
+  const k = document.createElement('div'); k.className='result-key'; k.textContent = key;
+  const v = document.createElement('div'); v.className='result-val'; v.innerHTML = typeof val === 'string' ? esc(val) : `<pre class="pre">${esc(JSON.stringify(val,null,2))}</pre>`;
+  row.appendChild(k); row.appendChild(v); container.appendChild(row);
+}
+
+/* ===== Network & info functions (client-side) ===== */
 async function getPublicIP(){
   const urls = ['https://api64.ipify.org?format=json','https://api.ipify.org?format=json'];
   for(const u of urls){
     try{
-      const r = await fetch(u,{cache:'no-store'}); if(r.ok){ const j=await r.json(); if(j.ip) return j.ip; }
+      const r = await fetch(u,{cache:'no-store'}); if(r.ok){ const j = await r.json(); if(j.ip) return j.ip; }
     }catch(e){}
   }
-  throw new Error('לא ניתן לשלוף IP ציבורי');
+  throw new Error('לא ניתן לשחזר IP ציבורי');
 }
 async function getIPDetails(ip){
   if(!ip) throw new Error('ip missing');
@@ -394,9 +512,17 @@ async function getIPDetails(ip){
   }catch(e){}
   return null;
 }
+async function rdapLookup(ip){
+  // best-effort, might be blocked by CORS; safe client-side attempt
+  if(!ip) return null;
+  try{
+    const r = await fetch(`https://rdap.org/ip/${ip}`); if(r.ok) return await r.json();
+  }catch(e){}
+  return null;
+}
 
-/* ===== WebRTC check ===== */
-function checkWebRTCIce(timeout=5000){
+/* WebRTC ICE check */
+function checkWebRTCIce(timeout=4500){
   return new Promise((resolve)=>{
     const ips = new Set();
     const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
@@ -415,54 +541,171 @@ function checkWebRTCIce(timeout=5000){
   });
 }
 
-/* ===== DNS heuristic ===== */
+/* DNS heuristic */
 async function checkDNSLeak(){
   try{
-    const r = await fetch('https://1.1.1.1/cdn-cgi/trace',{cache:'no-store'}); if(r.ok){ const txt=await r.text(); return {ok:true,source:'cloudflare',raw:txt}; }
+    const r = await fetch('https://1.1.1.1/cdn-cgi/trace',{cache:'no-store'}); if(r.ok){ const txt = await r.text(); return {ok:true,source:'cloudflare',raw:txt}; }
   }catch(e){}
-  try{ const r2 = await fetch('https://ipapi.co/json/'); if(r2.ok) return {ok:true,source:'ipapi',json:await r2.json()}; }catch(e){}
+  try{ const r2 = await fetch('https://ipapi.co/json/'); if(r2.ok){ const j = await r2.json(); return {ok:true,source:'ipapi',json:j}; } }catch(e){}
   return {ok:false};
 }
 
-/* ===== Fingerprint/WebGL/Permissions/AdBlock/Trackers/Firewall/VPN detection ===== */
+/* Fingerprint + OS detection */
 function getFingerprint(){
-  const nav = navigator; let canvasHash=null;
-  try{ const c=document.createElement('canvas'); c.width=200; c.height=40; const ctx=c.getContext('2d'); ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillStyle='#f60'; ctx.fillText('CyberScanPro',2,2); canvasHash=c.toDataURL().slice(0,80); }catch(e){}
-  return {userAgent:nav.userAgent,platform:nav.platform,languages:nav.languages,cores:nav.hardwareConcurrency,screen:{width:screen.width,height:screen.height,colorDepth:screen.colorDepth},canvasHash,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
+  const nav = navigator;
+  let canvasHash=null;
+  try{
+    const c = document.createElement('canvas'); c.width=200; c.height=40; const ctx=c.getContext('2d'); ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillStyle='#f60'; ctx.fillText('CyberScanPro',2,2); canvasHash=c.toDataURL().slice(0,80);
+  }catch(e){}
+  const ua = nav.userAgent || '';
+  const os = detectOS(ua);
+  return {
+    userAgent: ua,
+    platform: nav.platform,
+    languages: nav.languages,
+    cores: nav.hardwareConcurrency,
+    screen: {width: screen.width, height: screen.height, colorDepth: screen.colorDepth},
+    canvasHash,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    os
+  };
 }
-function getWebGLInfo(){ try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl')||c.getContext('experimental-webgl'); if(!gl) return null; const dbg=gl.getExtension('WEBGL_debug_renderer_info'); return {vendor: dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR), renderer: dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)}; }catch(e){ return null; } }
-async function checkPermissions(){ const perms=['geolocation','camera','microphone','notifications','persistent-storage']; const out={}; if(!navigator.permissions) return out; for(const p of perms){ try{ const s = await navigator.permissions.query({name:p}); out[p]=s.state; }catch(e){ out[p]='unknown'; } } return out; }
-async function detectAdBlock(){ return new Promise(resolve=>{ const bait=document.createElement('div'); bait.className='adsbox'; bait.style.width='1px'; bait.style.height='1px'; bait.style.position='absolute'; bait.style.left='-9999px'; document.body.appendChild(bait); setTimeout(()=>{ const blocked=(getComputedStyle(bait).display==='none' || bait.offsetParent===null || bait.clientHeight===0); document.body.removeChild(bait); resolve(blocked); },150); }); }
-async function detectTrackers(){ const trackers=['https://www.google-analytics.com/analytics.js','https://connect.facebook.net/en_US/fbevents.js','https://static.hotjar.com/c/hotjar-']; const found=[]; for(const t of trackers){ try{ await new Promise((res,rej)=>{ const img=new Image(); let done=false; img.onload=()=>{ if(!done){ done=true; res(true);} }; img.onerror=()=>{ if(!done){ done=true; rej(false);} }; setTimeout(()=>{ if(!done){ done=true; rej(false);} },2500); img.src = t + '?r=' + Math.random(); }); found.push(t); }catch(e){} } return found; }
-async function firewallHeuristic(){ const urls=['https://api.ipify.org?format=json','https://ipapi.co/json/','https://1.1.1.1/cdn-cgi/trace']; let ok=0; for(const u of urls){ try{ const r=await fetch(u,{mode:'cors'}); if(r && r.ok) ok++; }catch(e){} } return ok>=2; }
-function detectVPNorProxy(details, rdap){ const suspect = ['vpn','proxy','cloud','amazon','google','microsoft','digitalocean','ovh','linode','hetzner','vps','hosting','aws','azure','aliyun','cloudflare']; let score=0; let joined=''; if(details){ if(details.org) joined+=details.org.toLowerCase(); if(details.isp) joined+=details.isp.toLowerCase(); } if(rdap){ if(rdap.name) joined+=String(rdap.name).toLowerCase(); } suspect.forEach(w=>{ if(joined.includes(w)) score++; }); if(joined.includes('tor')) score+=2; return {likely: score>=2, score, raw: joined || '—'}; }
+function detectOS(ua){
+  ua = ua.toLowerCase();
+  if(/windows|win32/.test(ua)) return 'Windows';
+  if(/macintosh|mac os x/.test(ua)) return 'macOS';
+  if(/linux/.test(ua) && !/android/.test(ua)) return 'Linux';
+  if(/android/.test(ua)) return 'Android';
+  if(/iphone|ipad|ipod/.test(ua)) return 'iOS';
+  return 'Unknown';
+}
 
-/* ===== Sandbox runner ===== */
-function runSandbox(){ const code = el('sandboxCode').value || ''; const cleaned = code.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,''); el('sandboxFrame').srcdoc = cleaned; }
+/* WebGL info */
+function getWebGLInfo(){
+  try{
+    const c = document.createElement('canvas'); const gl = c.getContext('webgl') || c.getContext('experimental-webgl'); if(!gl) return null;
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    return {vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR), renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)};
+  }catch(e){ return null; }
+}
 
-/* ===== Support (mailto + local store) ===== */
-function sendSupportMail(){ const name=el('supName').value.trim(), email=el('supEmail').value.trim(), msg=el('supMsg').value.trim(); if(!name||!email||!msg){ alert('מלא שם, אימייל והודעה'); return; } const subject = encodeURIComponent('פנייה מ‑CyberScanPro ('+name+')'); const body = encodeURIComponent(`שם: ${name}\nאימייל: ${email}\n\n${msg}`); window.location.href = `mailto:hacker.david.7642@gmail.com?subject=${subject}&body=${body}`; }
-function saveTicketLocal(){ const name=el('supName').value.trim(), email=el('supEmail').value.trim(), msg=el('supMsg').value.trim(); const inbox = JSON.parse(localStorage.getItem('cyberscan_inbox')||'[]'); inbox.unshift({id:Date.now(),name,email,msg,created:new Date().toISOString(),status:'draft'}); localStorage.setItem('cyberscan_inbox',JSON.stringify(inbox)); alert('הטיקט נשמר מקומית (דמו)'); }
+/* Permissions */
+async function checkPermissions(){
+  const perms = ['geolocation','camera','microphone','notifications','persistent-storage'];
+  const out = {};
+  if(!navigator.permissions) return out;
+  for(const p of perms){
+    try{ const s = await navigator.permissions.query({name:p}); out[p]=s.state; }catch(e){ out[p]='unknown'; }
+  }
+  return out;
+}
 
-/* ===== Chat local demo ===== */
-function sendChat(){ const txt=el('chatInput').value.trim(); if(!txt) return; const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]'); chat.push({from:'visitor',text:txt,ts:Date.now()}); localStorage.setItem('cyberscan_chat',JSON.stringify(chat)); el('chatInput').value=''; renderChat(); }
-function renderChat(){ const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]'); const c = el('chatWindow'); c.innerHTML=''; if(!chat.length){ c.textContent='אין הודעות'; return; } chat.slice(-200).forEach(m=>{ const d=document.createElement('div'); d.style.marginBottom='8px'; const name = escapeHtml(m.from||'visitor'); d.innerHTML = `<div style="font-size:13px"><strong>${name}</strong> <span class="small">${new Date(m.ts).toLocaleString()}</span></div><div>${escapeHtml(m.text)}</div>`; c.appendChild(d); }); c.scrollTop = c.scrollHeight; }
+/* AdBlock detect */
+async function detectAdBlock(){
+  return new Promise(resolve=>{
+    const bait = document.createElement('div'); bait.className='adsbox'; bait.style.width='1px'; bait.style.height='1px'; bait.style.position='absolute'; bait.style.left='-9999px'; document.body.appendChild(bait);
+    setTimeout(()=>{ const blocked = (getComputedStyle(bait).display==='none' || bait.offsetParent===null || bait.clientHeight===0); document.body.removeChild(bait); resolve(blocked); },150);
+  });
+}
 
-/* ===== Cookie modal (granular) ===== */
-function showCookieModal(){ const modal = document.createElement('div'); modal.style.position='fixed'; modal.style.left='10%'; modal.style.right='10%'; modal.style.top='10%'; modal.style.bottom='10%'; modal.style.background='var(--panel)'; modal.style.padding='12px'; modal.style.overflow='auto'; modal.style.borderRadius='8px'; modal.innerHTML = `<h3>בחירת עוגיות</h3>
-  <div><label><input type="checkbox" id="ck_func" checked disabled> פונקציונליות (נדרשת)</label></div>
-  <div><label><input type="checkbox" id="ck_anal"> אנליטיקס</label></div>
-  <div><label><input type="checkbox" id="ck_ads"> פרסום</label></div>
-  <div style="margin-top:10px"><button id="ck_save" class="btn-primary">שמור</button> <button id="ck_cancel" class="btn-ghost">ביטול</button></div>`; document.body.appendChild(modal);
-  el('ck_save').addEventListener('click', ()=>{ const cfg={func:true,anal:el('ck_anal').checked,ads:el('ck_ads').checked}; localStorage.setItem('cyberscan_cookie',JSON.stringify(cfg)); modal.remove(); el('cookieBanner').classList.add('hidden'); alert('העדפות נשמרו'); });
+/* trackers */
+async function detectTrackers(){
+  const trackers = ['https://www.google-analytics.com/analytics.js','https://connect.facebook.net/en_US/fbevents.js','https://static.hotjar.com/c/hotjar-'];
+  const found = [];
+  for(const t of trackers){
+    try{
+      await new Promise((res,rej)=>{
+        const img = new Image(); let done=false;
+        img.onload = ()=>{ if(!done){ done=true; res(true); } };
+        img.onerror = ()=>{ if(!done){ done=true; rej(false); } };
+        setTimeout(()=>{ if(!done){ done=true; rej(false); } },2500);
+        img.src = t + '?r=' + Math.random();
+      });
+      found.push(t);
+    }catch(e){}
+  }
+  return found;
+}
+
+/* firewall heuristic */
+async function firewallHeuristic(){
+  const urls = ['https://api.ipify.org?format=json','https://ipapi.co/json/','https://1.1.1.1/cdn-cgi/trace'];
+  let ok=0;
+  for(const u of urls){
+    try{ const r = await fetch(u,{mode:'cors'}); if(r && r.ok) ok++; }catch(e){}
+  }
+  return ok>=2;
+}
+
+/* VPN/Proxy heuristic */
+function detectVPNorProxy(details, rdap){
+  const suspect = ['vpn','proxy','cloud','amazon','google','microsoft','digitalocean','ovh','linode','hetzner','vps','hosting','aws','azure','aliyun','cloudflare'];
+  let score=0; let joined='';
+  if(details){ if(details.org) joined += details.org.toLowerCase(); if(details.isp) joined += details.isp.toLowerCase(); }
+  if(rdap){ if(rdap.name) joined += String(rdap.name).toLowerCase(); }
+  suspect.forEach(w=>{ if(joined.includes(w)) score++; });
+  if(joined.includes('tor')) score+=2;
+  return {likely: score>=2, score, raw: joined || '—'};
+}
+
+/* sandbox runner (strip scripts) */
+function runSandbox(){
+  const code = el('sandboxCode').value || '';
+  const cleaned = code.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,'');
+  el('sandboxFrame').srcdoc = cleaned;
+}
+
+/* support mail (mailto) & local save */
+function sendSupportMail(){
+  const name = el('supName').value.trim(), email = el('supEmail').value.trim(), msg = el('supMsg').value.trim();
+  if(!name || !email || !msg){ alert('מלא שם, אימייל והודעה'); return; }
+  const subject = encodeURIComponent('פנייה מ-CyberScanPro ('+name+')');
+  const body = encodeURIComponent(`שם: ${name}\nאימייל: ${email}\n\n${msg}`);
+  window.location.href = `mailto:hacker.david.7642@gmail.com?subject=${subject}&body=${body}`;
+}
+function saveTicketLocal(){
+  const name = el('supName').value.trim(), email = el('supEmail').value.trim(), msg = el('supMsg').value.trim();
+  const inbox = JSON.parse(localStorage.getItem('cyberscan_inbox')||'[]');
+  inbox.unshift({id:Date.now(),name,email,msg,created:new Date().toISOString(),status:'draft'});
+  localStorage.setItem('cyberscan_inbox', JSON.stringify(inbox));
+  alert('הטיקט נשמר מקומית (דמו)');
+}
+
+/* chat local */
+function sendChat(){
+  const txt = el('chatInput').value.trim(); if(!txt) return;
+  const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]');
+  chat.push({from:'visitor',text:txt,ts:Date.now()});
+  localStorage.setItem('cyberscan_chat', JSON.stringify(chat));
+  el('chatInput').value='';
+  renderChat();
+}
+function renderChat(){
+  const chat = JSON.parse(localStorage.getItem('cyberscan_chat')||'[]'); const c = el('chatWindow'); c.innerHTML='';
+  if(!chat.length){ c.textContent='אין הודעות'; return; }
+  chat.slice(-200).forEach(m=>{ const d = document.createElement('div'); d.style.marginBottom='8px'; d.innerHTML = `<div style="font-size:13px"><strong>${esc(m.from||'visitor')}</strong> <span class="small">${new Date(m.ts).toLocaleString()}</span></div><div>${esc(m.text)}</div>`; c.appendChild(d); });
+  c.scrollTop = c.scrollHeight;
+}
+
+/* cookie modal */
+function showCookieModal(){
+  const modal = document.createElement('div'); modal.style.position='fixed'; modal.style.left='10%'; modal.style.right='10%'; modal.style.top='10%'; modal.style.bottom='10%'; modal.style.background='var(--panel)'; modal.style.padding='12px'; modal.style.overflow='auto'; modal.style.borderRadius='8px';
+  modal.innerHTML = `<h3>בחירת עוגיות</h3>
+    <div><label><input type="checkbox" id="ck_func" checked disabled> פונקציונליות (נדרשת)</label></div>
+    <div><label><input type="checkbox" id="ck_anal"> אנליטיקס</label></div>
+    <div><label><input type="checkbox" id="ck_ads"> פרסום</label></div>
+    <div style="margin-top:10px"><button id="ck_save" class="btn-primary">שמור</button> <button id="ck_cancel" class="btn-ghost">ביטול</button></div>`;
+  document.body.appendChild(modal);
+  el('ck_save').addEventListener('click', ()=>{ const cfg={func:true,anal:el('ck_anal').checked,ads:el('ck_ads').checked}; localStorage.setItem('cyberscan_cookie', JSON.stringify(cfg)); modal.remove(); el('cookieBanner').classList.add('hidden'); alert('העדפות נשמרו'); });
   el('ck_cancel').addEventListener('click', ()=>modal.remove());
 }
 
-/* ========================================================
-   נקודת סיום - כל הפונקציות לעיל מריצות בדיקות אמיתיות
-   אם יש משהו לא עובד - תפתח F12 -> Console ותעתיק לי את השגיאה.
-   אני דאגתי להסיר כפילויות שפות, לתקן את מצב המומחה להרצה מלאה ולהציג פרטים על ISP/מיקום.
-   ======================================================== */
+/* small utility */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* If any error occurs - inspect console (F12). */
+console.info('Cyber Scan Pro loaded — client-side only.');
+
 </script>
 </body>
 </html>
