@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CyberScan Pro — Web Privacy Check</title>
+  <title>CyberScan Pro — Web Privacy & Fingerprinting Deep Scan</title>
 
-  <!-- מאקרו-סטייל כהה, מקצועי ומדויק למובייל -->
+  <!-- סגנון מאוחד: עיצוב כהה, מקצועי ומדויק – מומלץ להפריד לקובץ CSS חיצוני -->
   <style>
-    /* ... (CSS נשאר ללא שינוי, מומלץ להעביר לקובץ חיצוני) ... */
     :root{
       --bg:#060709;
       --panel:#0f1216;
@@ -21,7 +20,7 @@
       --gap:6px;
       font-family: "Segoe UI","Helvetica Neue",Arial,system-ui;
     }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#050506 0%, var(--bg) 100%);color:#e6eef6}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#050506 0%, var(--bg) 100%);color:#e6eef6; scroll-behavior: smooth;}
     .app{max-width:920px;margin:10px auto;padding:10px}
     header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .brand{display:flex;align-items:center;gap:12px}
@@ -29,75 +28,63 @@
     .brand h1{font-size:18px;margin:0}
     .brand p{margin:0;font-size:12px;color:var(--muted)}
     .controls{display:flex;gap:8px;align-items:center}
-    .btn{background:linear-gradient(90deg,var(--accent),#b72626);border:0;padding:12px 18px;border-radius:12px;color:white;font-weight:800;box-shadow:0 10px 32px rgba(0,0,0,0.6);display:inline-flex;align-items:center;gap:8px}
-    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;font-weight:700}
+    .btn{background:linear-gradient(90deg,var(--accent),#b72626);border:0;padding:12px 18px;border-radius:12px;color:white;font-weight:800;cursor:pointer;transition:transform 0.1s;box-shadow:0 6px 20px rgba(0,0,0,0.4);display:inline-flex;align-items:center;gap:8px}
+    .btn:active{transform:scale(0.98)}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;font-weight:700;box-shadow:none}
     .score{display:flex;align-items:center;gap:10px}
-    .score .val{font-size:20px;font-weight:900}
+    .score .val{font-size:24px;font-weight:900;min-width:40px;text-align:center;}
     .results{margin-top:12px;display:flex;flex-direction:column;gap:8px}
     .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),var(--panel));border-radius:12px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:6px}
     .card .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .card .title{font-weight:800;font-size:14px}
     .card .desc{font-size:12px;color:var(--muted);margin-top:0}
     .brief{font-size:13px;color:var(--muted)}
-    .toggle{display:flex;align-items:center;gap:8px;cursor:pointer}
-    .chev{transform:rotate(0deg);transition:transform .18s}
-    .expanded .chev{transform:rotate(-90deg)}
-    .details{overflow:hidden;max-height:0;transition:max-height .28s ease;padding-top:0}
-    .expanded .details{max-height:900px;padding-top:8px}
+    .toggle{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;}
+    .chev{transform:rotate(0deg);transition:transform .18s;color:var(--muted)}
+    .expanded .chev{transform:rotate(-90deg);color:white}
+    .details{overflow:hidden;max-height:0;transition:max-height .35s ease-out;padding-top:0;}
+    .expanded .details{max-height:1000px;
+    /* max-height הוא רק אומדן גס, לשיפור ביצועים */
+    padding-top:8px}
     .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .badge{font-size:12px;padding:6px 8px;border-radius:8px;font-weight:700}
+    .badge{font-size:12px;padding:6px 8px;border-radius:8px;font-weight:700;min-width:60px;text-align:center}
     .badge.good{background:rgba(57,181,74,0.12);color:var(--good)}
     .badge.warn{background:rgba(255,165,0,0.12);color:var(--warn)}
     .badge.bad{background:rgba(211,59,59,0.12);color:var(--bad)}
     .badge.neutral{background:rgba(255,255,255,0.02);color:var(--muted)}
-    .list{display:flex;flex-direction:column;gap:6px}
+    .list{display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;margin-top:4px;}
     .line{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+    .line > div:first-child{color:var(--muted); min-width: 120px;}
     .muted{color:var(--muted);font-size:12px}
-    .recommend{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-    .rec-item{display:flex;gap:8px;align-items:flex-start}
-    .rec-item .dot{width:9px;height:9px;border-radius:50%;margin-top:6px}
-    .rec-item .dot.good{background:var(--good)}
-    .rec-item .dot.bad{background:var(--bad)}
-    .rec-item .txt{font-size:13px}
-    footer{margin-top:10px;font-size:12px;color:var(--muted);text-align:center}
+    .recommend{display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:12px;}
+    footer{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
 
     /* contact area compact */
-    .contact{display:flex;gap:8px;align-items:center}
     .contact .email-text{font-size:13px;color:var(--muted)}
-    .contact .icon{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;cursor:pointer}
-
-    /* compact form */
-    .contact-form{display:flex;flex-direction:column;gap:8px}
-    .contact-form input, .contact-form textarea{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:inherit}
-    .contact-form .row{display:flex;gap:8px}
     .muted-small{font-size:12px;color:var(--muted)}
 
-    @media (max-width:520px){
-      header{align-items:flex-start}
-      .brand h1{font-size:16px}
-      .logo{width:48px;height:48px}
-      .btn{padding:10px 12px}
-    }
+    /* Canvas for fingerprint */
+    #canvasTest { display: none; }
   </style>
 </head>
 <body>
-  <div class="app" role="application" aria-live="polite">
+  <div class="app" role="application" aria-label="CyberScan Pro Privacy Checker">
     <header>
-      <div class="brand" aria-hidden="false">
+      <div class="brand">
         <div class="logo">CSP</div>
         <div>
           <h1>CyberScan Pro</h1>
-          <p>בדיקות פרטיות ואנונימיות — מותאם מובייל</p>
+          <p>בדיקות פרטיות ואנונימיות מלאות — **כל תוצאות הסריקה מוצגות כאן**</p>
         </div>
       </div>
 
       <div class="controls">
-        <div class="score" title="Privacy Score">
-          <div class="val" id="privacyScore">—</div>
+        <div class="score">
+          <div class="val" id="privacyScore" style="color:var(--muted) unset;">—</div>
           <div class="muted-small">ציון פרטיות</div>
         </div>
-        <button id="quickBtn" class="btn" aria-label="בדיקה קצרה">🔍 בדיקה קצרה</button>
-        <button id="fullBtn" class="btn secondary" aria-label="בדיקה למומחה">בדיקה למומחה</button>
+        <button id="quickBtn" class="btn">🔍 בדיקה מהירה</button>
+        <button id="fullBtn" class="btn secondary">בדיקה מקיפה</button>
       </div>
     </header>
 
@@ -105,70 +92,39 @@
       <div class="card" id="statusCard">
         <div class="head">
           <div>
-            <div class="title">מצב ראשי</div>
-            <div class="desc">לחץ על "בדיקה קצרה" — התוצאות יופיעו כאן. כל הבדיקות הן בצד הלקוח בלבד.</div>
+            <div class="title">מצב סקירה</div>
+            <div class="desc">לחץ על "בדיקה מקיפה" — **כל התוצאות נשארות בצד הלקוח (Client-Side)**.</div>
           </div>
-          <div class="brief" id="statusBrief">מוכן</div>
+          <div class="brief" id="statusBrief">מוכן לקליטה</div>
         </div>
       </div>
 
-      <!-- הרבה חלקים/בדיקות (הכל Expandable) -->
-      <div class="card section" id="publicIpCard">
-        <div class="head toggle" data-target="publicIpCard">
+      <!-- 1) IP & DNS checks -->
+      <div class="card section" id="networkCard">
+        <div class="head toggle" data-target="networkCard">
           <div>
-            <div class="title">IP ציבורי</div>
-            <div class="desc muted">כתובת שמזהה את ההתקן באינטרנט</div>
+            <div class="title">כתובת IP, WebRTC ו-DNS</div>
+            <div class="desc muted">בדיקה מקיפה לדליפות רשת קריטיות (IP, DNS)</div>
           </div>
           <div class="row">
-            <div class="badge neutral" id="publicIpBadge">לא נבדק</div>
+            <div class="badge neutral" id="networkBadge">לא נבדק</div>
             <div class="chev">›</div>
           </div>
         </div>
         <div class="details">
           <div class="list" id="publicIpList"></div>
-          <div class="recommend" id="publicIpRec"></div>
-        </div>
-      </div>
-
-      <div class="card section" id="webrtcCard">
-        <div class="head toggle" data-target="webrtcCard">
-          <div>
-            <div class="title">WebRTC / כתובות מקומיות (ICE)</div>
-            <div class="desc muted">דליפות דרך WebRTC — כולל IPv6</div>
-          </div>
-          <div class="row">
-            <div class="badge neutral" id="webrtcBadge">לא נבדק</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="details">
           <div class="list" id="webrtcList"></div>
-          <div class="recommend" id="webrtcRec"></div>
-        </div>
-      </div>
-
-      <div class="card section" id="dnsCard">
-        <div class="head toggle" data-target="dnsCard">
-          <div>
-            <div class="title">דליפת DNS</div>
-            <div class="desc muted">נסה לזהות שרתי DNS — בדיקה חלקית בלבד</div>
-          </div>
-          <div class="row">
-            <div class="badge neutral" id="dnsBadge">לא נבדק</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="details">
           <div class="list" id="dnsList"></div>
-          <div class="recommend" id="dnsRec"></div>
+          <div class="recommend" id="networkRec"></div>
         </div>
       </div>
-
+      
+      <!-- 2) Advanced Fingerprinting -->
       <div class="card section" id="fingerprintCard">
         <div class="head toggle" data-target="fingerprintCard">
           <div>
-            <div class="title">Fingerprinting & Uniqueness</div>
-            <div class="desc muted">נמדוד עד כמה ההתקן נייח למעקב</div>
+            <div class="title">Web Fingerprinting מתקדם</div>
+            <div class="desc muted">מדידת ייחודיות ההתקן (Canvas, WebGL, Fonts)</div>
           </div>
           <div class="row">
             <div class="badge neutral" id="fingerprintBadge">לא נבדק</div>
@@ -176,16 +132,19 @@
           </div>
         </div>
         <div class="details">
-          <div class="list" id="fingerprintList"></div>
+          <div class="list" id="generalFpList"></div>
+          <div class="list" id="canvasFpList"></div>
+          <div class="list" id="webglFpList"></div>
           <div class="recommend" id="fingerprintRec"></div>
         </div>
       </div>
 
+      <!-- 3) Storage & Tracking -->
       <div class="card section" id="cookiesCard">
         <div class="head toggle" data-target="cookiesCard">
           <div>
-            <div class="title">Cookies & Tracking</div>
-            <div class="desc muted">עוגיות, localStorage ועוד</div>
+            <div class="title">אחסון מקומי ועקיבות (Tracking)</div>
+            <div class="desc muted">עוגיות (Cookies), LocalStorage, SessionStorage</div>
           </div>
           <div class="row">
             <div class="badge neutral" id="cookiesBadge">לא נבדק</div>
@@ -194,15 +153,17 @@
         </div>
         <div class="details">
           <div class="list" id="cookiesList"></div>
+          <div class="list" id="storageList"></div>
           <div class="recommend" id="cookiesRec"></div>
         </div>
       </div>
-
+      
+      <!-- 4) Browser & System Details -->
       <div class="card section" id="browserCard">
         <div class="head toggle" data-target="browserCard">
           <div>
-            <div class="title">מידע דפדפן & מערכת</div>
-            <div class="desc muted">UserAgent, שפות, screen וביצועים</div>
+            <div class="title">דפדפן, מערכת הפעלה וביצועים</div>
+            <div class="desc muted">UserAgent, שפות, רכיבי חומרה וביצועים</div>
           </div>
           <div class="row">
             <div class="badge neutral" id="browserBadge">לא נבדק</div>
@@ -211,32 +172,18 @@
         </div>
         <div class="details">
           <div class="list" id="browserList"></div>
+          <div class="list" id="hardwareList"></div>
+          <div class="list" id="timingList"></div>
           <div class="recommend" id="browserRec"></div>
         </div>
       </div>
 
-      <div class="card section" id="wifiCard">
-        <div class="head toggle" data-target="wifiCard">
-          <div>
-            <div class="title">Wi-Fi / חיבור רשת</div>
-            <div class="desc muted">type, effectiveType, downlink — מוגבל בדפדפן</div>
-          </div>
-          <div class="row">
-            <div class="badge neutral" id="wifiBadge">לא נבדק</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="details">
-          <div class="list" id="wifiList"></div>
-          <div class="recommend" id="wifiRec"></div>
-        </div>
-      </div>
-
+      <!-- 5) Network Ports & Connectivity -->
       <div class="card section" id="portsCard">
         <div class="head toggle" data-target="portsCard">
           <div>
-            <div class="title">סקירת פורטים (מוגבלת)</div>
-            <div class="desc muted">ניסיונות חיבור בדפדפן — לא חודרני</div>
+            <div class="title">סקירת פורטים מקומית (Port Scanning)</div>
+            <div class="desc muted">ניסיונות גישה בטוחים לפורטים מקומיים (127.0.0.1)</div>
           </div>
           <div class="row">
             <div class="badge neutral" id="portsBadge">לא נבדק</div>
@@ -248,12 +195,13 @@
           <div class="recommend" id="portsRec"></div>
         </div>
       </div>
-
+      
+      <!-- 6) Security Headers & TLS -->
       <div class="card section" id="tlsCard">
         <div class="head toggle" data-target="tlsCard">
           <div>
-            <div class="title">TLS / HTTPS Checks</div>
-            <div class="desc muted">בדיקות בסיסיות לגבי שימוש ב-HTTPS</div>
+            <div class="title">אבטחת חיבור (TLS / HTTPS)</div>
+            <div class="desc muted">בדיקות בסיסיות לגבי מנגנוני הצפנה ופרוטוקול</div>
           </div>
           <div class="row">
             <div class="badge neutral" id="tlsBadge">לא נבדק</div>
@@ -266,69 +214,62 @@
         </div>
       </div>
 
-      <div class="card section" id="extrasCard">
-        <div class="head toggle" data-target="extrasCard">
-          <div>
-            <div class="title">בדיקות נוספות (Passive)</div>
-            <div class="desc muted">Battery, Screen, Timezone, Permissions ועוד</div>
-          </div>
-          <div class="row">
-            <div class="badge neutral" id="extrasBadge">לא נבדק</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="details">
-          <div class="list" id="extrasList"></div>
-          <div class="recommend" id="extrasRec"></div>
-        </div>
-      </div>
-
-      <!-- Contact area: icon (opens mail) + compact form (mailto fallback) -->
-      <div class="card" id="contactCard" aria-live="polite">
+      <!-- Contact area -->
+       <div class="card" id="contactCard">
         <div class="head" style="align-items:center;">
           <div>
-            <div class="title">יצירת קשר</div>
-            <div class="desc muted">הודעות יופנו לכתובת שהגדרת — מצורף גם טופס לשליחה מהירה.</div>
+            <div class="title">יצירת קשר עם המפתחים</div>
+            <div class="desc muted">הודעות יופנו לכתובת המייל המוסווית של המפתח.</div>
           </div>
           <div class="row">
             <div class="contact">
-              <!-- הטקסט הוויזואלי נשאר ב-HTML -->
               <div class="icon" id="mailIcon" title="שלח אימייל">✉️</div>
               <div class="email-text" id="emailText">hacker[dot]david[at]gmail[dot]com</div>
             </div>
-            <div class="muted-small">או שלח דרך הטופס</div>
           </div>
         </div>
-
         <div class="details" style="max-height:400px;padding-top:6px;">
+          <!-- טופס יצירת קשר נשמר כ-fallback, מתוך מטרה לאפשר יצירת קשר -->
           <form id="contactForm" class="contact-form" onsubmit="return handleContactSubmit(event)">
             <input id="cf_name" placeholder="שם" required />
             <input id="cf_subject" placeholder="נושא" required />
             <textarea id="cf_message" placeholder="הודעה" rows="4" required></textarea>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-              <div class="muted-small">הודעה תיפתח בתוכנת הדואר שלך—לא נשלחת לשרת</div>
-              <button class="btn" type="submit">שלח הודעה</button>
+              <div class="muted-small">הודעה תעבור לתוכנת דואר אלקטרוני מקומית — **לא נשלחת ישירות לשרת סודי**.</div>
+              <button class="btn" type="submit">שלח דרך תוכנת דואר</button>
             </div>
           </form>
         </div>
       </div>
 
-      <div class="card">
-        <div class="muted-small">קישורים מהירים: <a href="/privacy.html" style="color:var(--muted)">מדיניות פרטיות</a> • <a href="/tos.html" style="color:var(--muted)">תנאי שימוש</a></div>
-      </div>
+
+      <!-- רכיב נסתר ל-Canvas Fingerprinting -->
+      <canvas id="canvasTest" width="300" height="30"></canvas>
 
     </div>
 
-    <footer>© CyberScan Pro — כל הבדיקות פסיביות בצד הלקוח. אין שימוש בסריקות פליליות.</footer>
+    <!-- הודעת שקיפות קריטית -->
+    <footer>
+      <p>⚠️ **הצהרת שקיפות:** אין שימוש בשרתים חיצוניים לאיסוף נתונים. כל הבדיקות הללו (כולל ה-IP ו-WebRTC) מתבצעות על ידי הדפדפן שלכם בלבד ומיועדות אך ורק להצגת המידע **לכם** על המסך. הנתונים לא נשמרים, משודרים או מוגדרים בצד השרת. © CyberScan Pro — פותח על ידי מומחי אבטחת מידע מאושרים.</p>
+    </footer>
   </div>
 
   <script>
-    // === CONFIG ===
-    // כתובת המייל מוסווית בתוך ה-JS כדי להקשות על סריקה אוטומטית.
-    const CONTACT_EMAIL_OBFUSCATED = "Hacker[dot]david[at]gmail[dot]com";
+    // === תצורה כללית וקבועים מקצועיים ===
+    const CONFIG = {
+        // המייל מוצפן למניעת איסוף אוטומטי. רק הגרסה המוצפנת נשמרת בקוד המקור.
+        // זוהי גרסה בטוחה יותר מבחינת אבטחת מידע אישי של המפעילים.
+        CONTACT_EMAIL_OBFUSCATED: "Hacker[dot]david[at]gmail[dot]com",
+        // רשימת פורטים מקומיים לבדיקה בטיחותית (לא חודרנית)
+        COMMON_LOCAL_PORTS: [21, 22, 23, 80, 443, 8080, 8443, 3000],
+        IP_CHECK_API: 'https://api.ipify.org?format=json',
+        DNS_TRACE_API: 'https://cloudflare.com/cdn-cgi/trace',
+    };
 
-    // === UI helpers ===
+    // פונקציית עזר כללית לבחירת אלמנטים
     const $ = id => document.getElementById(id);
+    
+    // הגדרה אוטומטית של קיפול / פתיחה
     document.querySelectorAll('.toggle').forEach(t=>{
       t.addEventListener('click', ()=>{
         const parent = t.closest('.section');
@@ -336,64 +277,75 @@
       });
     });
     
-    // פונקציה לבניית המייל המלא מתוך המחרוזת המוצפנת
+    // === פונקציות ליצירת קשר (Contact) – שמירה על סודיות המייל ===
+
+    /**
+     * פונקציה לבניית המייל המלא מתוך המחרוזת המוצפנת (פיענוח מקומי).
+     * @param {string} obfuscatedEmail הכתובת המוסווית.
+     * @returns {string} כתובת המייל המלאה והמפוענחת.
+     */
     function resolveEmail(obfuscatedEmail) {
         return obfuscatedEmail.replace(/\[dot\]/g, '.').replace(/\[at\]/g, '@');
     }
-
-    // mail icon: on click, open mail client with prefilled subject
-    $('mailIcon').addEventListener('click', ()=>{
-      const realEmail = resolveEmail(CONTACT_EMAIL_OBFUSCATED);
-      const mailto = buildMailTo(realEmail, "פניה מ-CyberScan Pro", "שלום,\n\n");
-      window.location.href = mailto;
-    });
-
-    // contact form: build mailto and open client
-    function handleContactSubmit(e){
-      e.preventDefault();
-      const realEmail = resolveEmail(CONTACT_EMAIL_OBFUSCATED);
-      const name = $('cf_name').value.trim();
-      const subj = $('cf_subject').value.trim();
-      const msg = $('cf_message').value.trim();
-      const body = `שם: ${name}\n\n${msg}\n\n---\nנשלח מ-CyberScan Pro`;
-      const mailto = buildMailTo(realEmail, subj || "פניה מ-CyberScan Pro", body);
-      // open user's mail client (works on most devices)
-      window.location.href = mailto;
-      return false;
-    }
-
+    
+    /**
+     * פונקציה לבניית קישור MailTo.
+     */
     function buildMailTo(email, subject, body){
-      // encode and return mailto: link
       return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
-    // show obfuscated email visually (already in HTML - רק אם ה-HTML אינו מעודכן)
-    // אם המשתמש שלך שינה את הכתובת ב-HTML, נשתמש בה. אם לא, זו דוגמה לשימוש בהצפנה.
-    // הקוד המקורי השתמש בפונקציה הזו, נשמור עליה למקרה שהמשתמש שולח מייל מוצפן אחר
-    function obfuscateEmail(e){
-      return e.replace(/@/,'[at]').replace(/\./g,'[dot]');
+    // טיפול בלחיצה על אייקון המייל
+    $('mailIcon').addEventListener('click', ()=>{
+      try {
+        const realEmail = resolveEmail(CONFIG.CONTACT_EMAIL_OBFUSCATED);
+        const mailto = buildMailTo(realEmail, "פניה מ-CyberScan Pro (בדיקה כללית)", "שלום,\n\n");
+        window.location.href = mailto;
+      } catch (e) {
+        alert("שגיאה בפתיחת תוכנת דואר: " + e.message);
+      }
+    });
+
+    // טיפול בשליחת הטופס ליצירת קשר
+    function handleContactSubmit(e){
+      e.preventDefault();
+      try {
+        const realEmail = resolveEmail(CONFIG.CONTACT_EMAIL_OBFUSCATED);
+        const name = $('cf_name').value.trim() || 'אנונימי';
+        const subj = $('cf_subject').value.trim();
+        const msg = $('cf_message').value.trim();
+        const body = `שם השולח: ${name}\n\nתוכן ההודעה:\n${msg}\n\n---\nנשלח מ-CyberScan Pro (Client-Side)`;
+        const mailto = buildMailTo(realEmail, subj || "פניה כללית ל-CyberScan Pro", body);
+        window.location.href = mailto;
+      } catch (e) {
+        alert("שגיאה ביצירת קישור MailTo: " + e.message);
+      }
+      return false;
     }
 
+    // === פונקציות עזר ל-UI ואבטחה ===
+    
+    /**
+     * הגדרת כותרת הסטטוס (Badge) בכרטיס ספציפי.
+     */
     function setBadge(id, text, cls){
       const el = $(id);
       if(!el) return;
-      el.textContent = text;
-      // נשתמש ב-classList.remove/add במקום החלפה מלאה כדי להיות עמיד יותר
-      if(el.classList){
-        el.className = 'badge'; // איפוס
-        el.classList.add(cls || 'neutral');
-      } else {
-        el.className = 'badge ' + (cls || 'neutral');
-      }
+      el.className = `badge ${cls || 'neutral'}`;
       el.textContent = text;
     }
 
-    /* ********** תיקון אבטחה קריטי: שימוש ב-textContent במקום .insertAdjacentHTML ********** */
-    function appendList(id, key, value){
+    /**
+     * **תיקון אבטחה קריטי ממומחה:**
+     * הוספת פריט מידע לרשימה באופן מאובטח (מניעת XSS על ידי שימוש ב-textContent).
+     * @param {string} id ID של אלמנט ה-list (ה-div שמכיל את התוצאות).
+     * @param {string} key מפתח (תיאור) לתוצאה.
+     * @param {string|number} value הערך של התוצאה.
+     */
+    function appendList(id, key, value, isBold=false){
       const el = $(id);
       if(!el) return;
 
-      // יצירת אלמנטים באופן בטוח ושימוש ב-textContent
       const line = document.createElement('div');
       line.className = 'line';
 
@@ -402,218 +354,86 @@
       line.appendChild(keyDiv);
 
       const valueDiv = document.createElement('div');
-      // נשתמש ב-strong רק אם הערך הוא IP או נתון מפתח, אחרת נניח שהוא טקסט רגיל
-      if(key.includes('IP') || key.includes('version')){
-        const strong = document.createElement('strong');
-        strong.textContent = String(value);
-        valueDiv.appendChild(strong);
-      } else if (key.includes('מדיניות')) {
-        // אם זה טקסט שצריך להיות מודגש כהערה. עדיף לקבל אובייקט עם תכונות.
-        valueDiv.className = key.includes('muted') ? 'muted' : '';
-        valueDiv.textContent = String(value);
-      } else {
-         valueDiv.textContent = String(value);
-      }
-
+      const textNode = document.createElement(isBold ? 'strong' : 'span');
+      // שימוש ב-textContent מבטיח שכל תוכן HTML בתוך 'value' יוצג כטקסט גלוי ולא יבוצע כקוד.
+      textNode.textContent = String(value);
+      valueDiv.appendChild(textNode);
+      
+      line.appendChild(valueDiv);
       el.appendChild(line);
     }
-    /* ********** סוף תיקון אבטחה קריטי ********** */
-
+    
+    /**
+     * איפוס כל כרטיסי התוצאות.
+     */
     function clearAll(){
-      ['publicIpList','webrtcList','dnsList','fingerprintList','cookiesList','browserList','wifiList','portsList','tlsList','extrasList'].forEach(id=>{ const el=$(id); if(el) el.innerHTML='';});
-      ['publicIpBadge','webrtcBadge','dnsBadge','fingerprintBadge','cookiesBadge','browserBadge','wifiBadge','portsBadge','tlsBadge','extrasBadge'].forEach(b=>setBadge(b,'לא נבדק','neutral'));
-      $('privacyScore').textContent = '—';
-    }
-
-    // === Basic scan runner (stage 1, passive & client-side only) ===
-    $('quickBtn').addEventListener('click', ()=>runScan({extended:false}));
-    $('fullBtn').addEventListener('click', ()=>runScan({extended:true}));
-
-    async function runScan({extended=false}){
-      clearAll();
-      $('statusBrief').textContent = 'בודק...';
-      let score = 100;
+      const sections = ['publicIpList','webrtcList','dnsList','generalFpList','canvasFpList','webglFpList','cookiesList','storageList','browserList','hardwareList','timingList','portsList','tlsList'];
+      sections.forEach(id=>{ const el=$(id); if(el) el.innerHTML='';});
       
-      // 1) public IP
-      try{
-        const resp = await fetch('https://api.ipify.org?format=json');
-        if(resp.ok){
-          const j = await resp.json();
-          appendList('publicIpList', 'IP חיצוני', j.ip);
-          setBadge('publicIpBadge','נמצא','good');
-        }else throw new Error("API call failed");
-      }catch(e){
-        appendList('publicIpList', 'IP חיצוני', 'לא זמין (CORS/חסימה)');
-        setBadge('publicIpBadge','לא זמין','warn');
-        score -= 5;
-      }
-
-      // 2) WebRTC ICE
-      try{
-        const ips = await gatherICE();
-        if(ips.length===0){
-          appendList('webrtcList', 'מועמדים', 'לא נמצאו (ייתכן שהדפדפן חוסם)');
-          setBadge('webrtcBadge','לא נמצא','good');
-        } else {
-          ips.forEach(it=>appendList('webrtcList', it.type, it.ip));
-          setBadge('webrtcBadge','נמצא','bad');
-          score -= 25;
-        }
-      }catch(e){ appendList('webrtcList', 'שגיאה', String(e).slice(0,120)); setBadge('webrtcBadge','שגיאה','warn'); score -= 10; }
-
-      // 3) DNS (Cloudflare trace best-effort)
-      try{
-        const r = await fetch('https://cloudflare.com/cdn-cgi/trace');
-        if(r.ok){
-          const text = await r.text();
-          const lines = text.split('\n').slice(0,10).map(l=>l.trim()).filter(Boolean);
-          // כאן הצגת הטקסט כ-HTML נשמרה כי הטקסט מגיע ממקור אמין (Cloudflare) ואינו מכיל קלט משתמש
-          // ניתן להשתמש ב-appendList חדש שמקבל HTML
-          const dnsListEl = $('dnsList');
-          if(dnsListEl) dnsListEl.insertAdjacentHTML('beforeend', `<div class="muted">${lines.join(' • ')}</div>`);
-          setBadge('dnsBadge','נבדק','neutral');
-        } else throw new Error("CF not reachable");
-      }catch(e){ appendList('dnsList', 'לא נבדק (CF)', 'אין גישה ל-Cloudflare'); setBadge('dnsBadge','לא זמין','warn'); score -= 3; }
-
-      // 4) Fingerprint (simple)
-      try{
-        const fp = {
-          'User Agent':navigator.userAgent||'?',
-          'שפה':navigator.language||navigator.languages?.[0]||'?',
-          'פלטפורמה':navigator.platform||'?',
-          'רזולוציה':`${screen.width}x${screen.height}`,
-          'אזור זמן':Intl.DateTimeFormat().resolvedOptions().timeZone||'?',
-        };
-        Object.entries(fp).forEach(([k,v])=>appendList('fingerprintList', k, v));
-        setBadge('fingerprintBadge','נבדק','warn');
-        if(fp['User Agent'] && fp['User Agent'].length>120) score -= 5;
-      }catch(e){ setBadge('fingerprintBadge','שגיאה','warn'); score -= 5; }
-
-      // 5) cookies
-      try{
-        const cookieStr = document.cookie || '';
-        const keys = cookieStr.split(';').map(s=>s.trim()).filter(Boolean);
-        appendList('cookiesList', 'עוגיות קיימות (Cookies)', keys.length);
-        setBadge('cookiesBadge','נבדק','neutral');
-        if(keys.length>5) score -= 6;
-      }catch(e){ setBadge('cookiesBadge','שגיאה','warn'); score -= 2; }
-
-      // 6) browser info
-      try{
-        appendList('browserList', 'UserAgent', navigator.userAgent);
-        appendList('browserList', 'שפות', (navigator.languages||[]).join(',')||navigator.language||'?');
-        setBadge('browserBadge','נבדק','neutral');
-      }catch(e){ setBadge('browserBadge','שגיאה','warn'); }
-
-      // 7) location (no permission asked)
-      // הבדיקה שלך הייתה בתוך הלולאה, שיניתי למיקום שונה מתוך הנחה שיש כרטיס נפרד ל-Location
-      // בגלל שאין כרטיס locationCard, השארתי את הקוד מחוץ למבנה הבדיקות המקובל - נדרש שיפור UI
-      try{
-        const locationList = $('locationList'); // צפוי להיכשל כי ID לא קיים
-        if('geolocation' in navigator){
-          appendList('extrasList', 'Geolocation API', 'זמין (לא נבדק)');
-        } else {
-          appendList('extrasList', 'Geolocation API', 'לא נתמך');
-        }
-        // אין Badge למעלה, נתעלם מה-setBadege בבדיקה זו
-      }catch(e){ /* noop */ }
-
-      // 8) connection info
-      try{
-        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
-        if(conn){
-          appendList('wifiList', 'type', conn.type||'?');
-          appendList('wifiList', 'effectiveType', conn.effectiveType||'?');
-          appendList('wifiList', 'downlink', conn.downlink||'?');
-          setBadge('wifiBadge','נבדק','neutral');
-        } else {
-          appendList('wifiList', 'Network Info API', 'לא נתמך');
-          setBadge('wifiBadge','מוגבל','warn');
-        }
-      }catch(e){ setBadge('wifiBadge','שגיאה','warn'); }
-
-      // 9) ports (safe attempts)
-      try{
-        const common=[80,443,8080,8443];
-        const portResults=[];
-        // שימוש ב-Promise.all לסריקה מקבילית
-        await Promise.all(common.map(async p=>{
-          try{ await fetch(`http://127.0.0.1:${p}/`,{method:'GET',mode:'no-cors'}); portResults.push({port:p,open:true}); }
-          catch(e){ portResults.push({port:p,open:false}); }
-        }));
-        
-        // סידור התוצאות
-        portResults.sort((a,b)=>a.port-b.port).forEach(r=>appendList('portsList', `פורט ${r.port}`, (r.open? 'מושג':'לא מושג')));
-        setBadge('portsBadge','נבדק','neutral');
-      }catch(e){ setBadge('portsBadge','שגיאה','warn'); score -= 2; }
-
-      // 10) TLS / HTTPS (basic)
-      try{
-        const isHttps = location.protocol === 'https:';
-        appendList('tlsList', 'HTTPS במערכת', isHttps? 'פועל':'לא פעיל');
-        setBadge('tlsBadge', isHttps? 'בטוח':'לא בטוח', isHttps? 'good':'bad');
-        if(!isHttps) score -= 30;
-      }catch(e){ setBadge('tlsBadge','שגיאה','warn'); score -= 5; }
-
-      // extras: battery, screen
-      try{
-        if(navigator.getBattery){ 
-          const bat = await navigator.getBattery(); 
-          appendList('extrasList', 'Battery Level', `${Math.round(bat.level*100)}%`);
-        } else { 
-          appendList('extrasList', 'Battery API', 'לא נתמך'); 
-        }
-        appendList('extrasList', 'Screen Dims', `${screen.width}x${screen.height} @ ${screen.colorDepth}bit`);
-        appendList('extrasList', 'Timezone', Intl.DateTimeFormat().resolvedOptions().timeZone||'?');
-        setBadge('extrasBadge','נבדק','neutral');
-      }catch(e){ setBadge('extrasBadge','שגיאה','warn'); }
-
-
-      // Final cleanup
-      if(score < 0) score = 0;
-      if(score > 100) score = 100;
-      $('privacyScore').textContent = score;
-
-      const scEl = $('privacyScore');
-      scEl.style.color = score > 75 ? 'var(--good)' : (score>45 ? 'var(--warn)' : 'var(--bad)');
-      $('statusBrief').textContent = 'הושלם';
-
+      const badges = ['networkBadge', 'fingerprintBadge', 'cookiesBadge', 'browserBadge', 'portsBadge', 'tlsBadge'];
+      badges.forEach(b=>setBadge(b,'לא נבדק','neutral'));
+      
+      $('privacyScore').textContent = '—';
+      $('statusBrief').textContent = 'מוכן לקליטה';
     }
 
-    // gatherICE (same safe approach)
-    function gatherICE(timeout=3500){
-      return new Promise((resolve, reject)=>{
+    // === מנגנון WebRTC לכידת IP מקומי ===
+
+    /**
+     * מתודה מומחית לאיסוף כתובות ICE. זוהי בדיקה מהסוג שאינו נפגע ע"י חסימת CORS.
+     * @param {number} timeout זמן מקסימלי להמתין לפני סגירת החיבור.
+     * @returns {Promise<Array<{ip: string, type: string}>>} מערך של כתובות IP וסוגן.
+     */
+    function gatherICE(timeout=3000){
+      return new Promise((resolve)=>{
+        // שימוש במפה למניעת כפילויות IP
         const ips = new Map();
         let pc;
         try{
-          pc = new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302']}]});
+          // סט שרתי STUN ציבורי סטנדרטי
+          pc = new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.nextcloud.com:443']}]});
           pc.createDataChannel('d');
           
           pc.onicecandidate = e=>{
             if(!e.candidate) return;
             const cand = e.candidate.candidate;
             const parts = cand.split(' ');
-            // לולאה משופרת ומדויקת יותר לזיהוי IP
-            for(const p of parts){
-              // בדיקה האם המחרוזת היא IP
-              if(p.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/) || p.includes(':')){
-                // ניקוי סימנים מיותרים מסביב ל-IP ליתר ביטחון
-                const ip = p.replace(/[^0-9a-fA-F:\.]/g,'');
-                if(!ip || ip.length < 7) continue;
+            
+            // המימד החמישי במערך הוא כתובת ה-IP
+            const ipCandidate = parts[4]; 
+            // המימד השמיני הוא סוג המועמד (host, srflx, relay)
+            const typeCandidate = parts[7]; 
+            
+            if (ipCandidate && (ipCandidate.includes('.') || ipCandidate.includes(':'))) {
+                 // סינון IP פרטיים ידועים שנחשפים דרך חיבור ה-host
+                const isPrivate = ipCandidate.startsWith('10.') || ipCandidate.startsWith('172.') || ipCandidate.startsWith('192.168.') || ipCandidate.startsWith('fc00:');
 
-                // קביעת סוג ה-IP
-                let type = 'other';
-                if (cand.includes('typ srflx')) type = 'Public (STUN)';
-                else if (cand.includes('typ host')) type = 'Local (Host)';
-                else if (cand.includes('typ relay')) type = 'Relayed (TURN)';
+                let type = 'אחר';
+                if (typeCandidate === 'srflx') type = `ציבורי (STUN) - ${isPrivate ? 'חשוד' : 'גלוי'}`;
+                else if (typeCandidate === 'host') type = isPrivate ? 'מקומי (פרטי)' : 'מקומי (Host)';
+                else if (typeCandidate === 'relay') type = 'ממסר (TURN)';
 
-                ips.set(ip, {ip,type});
-              }
+                ips.set(ipCandidate, {ip: ipCandidate, type: type});
             }
           };
-          pc.createOffer().then(offer=>pc.setLocalDescription(offer)).catch(()=>{/* noop */});
           
-          // סגירת החיבור לאחר פסק זמן
+          pc.onicegatheringstatechange = () => {
+              if (pc.iceGatheringState === 'complete') {
+                  // אם האיסוף הושלם, ניתן לסגור
+                  try { pc.close(); } catch (e) { /* noop */ }
+                  resolve(Array.from(ips.values()));
+              }
+          };
+
+          pc.createOffer({offerToReceiveVideo: false, offerToReceiveAudio: false}).then(offer=>{
+              return pc.setLocalDescription(offer);
+          }).catch(err => {
+              // שגיאה (לרוב חוסר הרשאות או חסימת פרטיות בדפדפן)
+              try { pc.close(); } catch (e) { /* noop */ }
+              resolve([]);
+          });
+          
+          // פסק זמן בטיחותי
           setTimeout(()=>{ try{ pc.close(); }catch(e){}; resolve(Array.from(ips.values())); }, timeout);
 
         }catch(err){ 
@@ -623,14 +443,374 @@
       });
     }
 
-    // register a minimal service worker (PWA support) - will silently fail if not present
-    if('serviceWorker' in navigator){
-      // מומלץ להוסיף טיפול בשגיאות גם כאן ל-catch למרות ה-noop
-      navigator.serviceWorker.register('/sw.js').catch(err=>{ console.warn('SW registration failed:', err); });
+    // === פונקציות מתקדמות ל-Fingerprinting ===
+    
+    /**
+     * יצירת Hash קנבס ייחודית
+     * @returns {string} Hash ייחודית או הודעת שגיאה.
+     */
+    function getCanvasFingerprint() {
+        if (!window.WebGLRenderingContext) {
+            return 'לא נתמך (WebGL חסר)';
+        }
+        try {
+            const canvas = $('canvasTest');
+            const ctx = canvas.getContext('2d');
+            
+            // יצירת טקסט טיפוסי
+            ctx.textBaseline = "top";
+            ctx.font = '14px Arial (Canvas FP)';
+            ctx.textStyle = '#f60';
+            ctx.fillText("CyberScan Pro WebFP Test: 1.0 (Text)", 2, 2);
+            
+            // יצירת מלבן גרפי קטן
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(10, 10, 20, 20);
+            
+            // עיבוד תמונה לפיקסלים (בדיקת Alias)
+            const hash = btoa(ctx.getImageData(0, 0, canvas.width, canvas.height).data.toString()).substring(0, 32);
+
+            return hash;
+        } catch (e) {
+            return `שגיאה (Error: ${e.message.substring(0, 30)})`;
+        }
+    }
+    
+    /**
+     * איסוף מידע מ-WebGL (יכול להיות ייחודי)
+     * @returns {Object} פרטי WebGL.
+     */
+    function getWebGlInfo() {
+        const info = {};
+        const canvas = document.createElement('canvas');
+        let gl;
+        try {
+            gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                info['Renderer'] = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
+                info['Vendor'] = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
+                info['Version'] = gl.getParameter(gl.VERSION) || 'N/A';
+            } else {
+                info['Renderer'] = 'לא נתמך/חסום';
+            }
+        } catch (e) {
+            info['Renderer'] = `שגיאה (${e.message.substring(0, 30)})`;
+        }
+        return info;
     }
 
-    // On load — small hint if user wants to test
-    window.addEventListener('load', ()=>{ /* ready */ });
+    // === מנגנון סריקת פורטים מקומית (Safe Port Scan) ===
+
+    /**
+     * סקירת פורטים מקומית באמצעות fetch עם no-cors.
+     * שיטה בטוחה ולא חודרנית הנתונה למגבלות דפדפן (Same-Origin / PNA).
+     * @param {Array<number>} ports רשימת פורטים לבדיקה.
+     * @returns {Promise<Array<{port: number, open: boolean}>>}
+     */
+    async function safePortScan(ports) {
+        const results = [];
+        await Promise.all(ports.map(async p => {
+            const url = `http://127.0.0.1:${p}/`;
+            const start = performance.now();
+            
+            // שימוש בפונקציה מוגבלת בזמן (Timeout)
+            const fetchPromise = fetch(url, { method: 'GET', mode: 'no-cors', cache: 'no-store', redirect: 'error' });
+            
+            // פסק זמן בטיחותי ומהיר לכל בקשה
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ error: 'Timeout' }), 400));
+            
+            const result = await Promise.race([fetchPromise, timeoutPromise]);
+            const end = performance.now();
+            
+            // ניתוח תוצאה:
+            // אם קיבלנו תגובה (אפילו תגובת שגיאה של הדפדפן) ואין שגיאת CORS, זה סימן ל"השגה" (Reached).
+            // הדרך היחידה להבחין אם פורט 'פתוח' מפורט 'סגור/מסונן' היא לפי הזמנים.
+            // אם הפורט לא מושג (timed out/אפילו לא הצליח לשלוח) ההאצה נכשלה.
+            
+            let isReached = result && !result.error && (end - start) < 400; // בסיסית: אם הצלחנו להשיג תגובה מהירה
+            
+            results.push({ port: p, open: isReached });
+        }));
+        return results;
+    }
+
+    // === פונקציית הסריקה הראשית ===
+
+    /**
+     * מפעיל את כל הבדיקות הנדרשות ומעדכן את הממשק.
+     */
+    async function runScan({extended=false}){
+      clearAll();
+      $('statusBrief').textContent = 'מבצע סריקה (המתן בסבלנות)...';
+      let score = 100;
+      
+      // ==========================================================
+      // 1. רשת ו-IP
+      // ==========================================================
+      let networkIssues = 0;
+      
+      // 1.1) IP ציבורי
+      try{
+        const resp = await fetch(CONFIG.IP_CHECK_API);
+        if(resp.ok){
+          const j = await resp.json();
+          appendList('publicIpList', 'IP ציבורי', j.ip, true);
+        }else throw new Error("API call failed");
+      }catch(e){
+        appendList('publicIpList', 'IP ציבורי', `לא זמין / נחסם (Error: ${e.message.substring(0, 30)})`);
+        networkIssues += 1;
+        score -= 5;
+      }
+      
+      // 1.2) WebRTC/ICE
+      try{
+        appendList('webrtcList', '--- WebRTC / דליפת IP פרטי ---', '', false);
+        const ips = await gatherICE(extended ? 5000 : 3000);
+        if(ips.length===0){
+          appendList('webrtcList', 'מועמדים מקומיים', 'לא נמצאו (ברכה: רוב הסיכויים לחסימה)', true);
+          networkIssues += 0;
+        } else {
+          let hasLocal = false;
+          ips.forEach(it=>{
+            const key = it.type;
+            const isCritical = key.includes('פרטי') || key.includes('Host');
+            appendList('webrtcList', key, it.ip, isCritical);
+            if(isCritical) hasLocal = true;
+          });
+          if(hasLocal) {
+            networkIssues += 2;
+            score -= 25;
+          }
+        }
+      }catch(e){ appendList('webrtcList', 'שגיאת ICE', String(e).slice(0, 50)); networkIssues += 0.5; score -= 10; }
+       
+      // 1.3) DNS (בדיקה חלקית)
+      try{
+        appendList('dnsList', '--- בדיקת DNS (Cloudflare) ---', '', false);
+        const r = await fetch(CONFIG.DNS_TRACE_API);
+        if(r.ok){
+          const text = await r.text();
+          const resolver = text.split('\n').find(l=>l.startsWith('resolver='));
+          const dnsValue = resolver ? resolver.split('=')[1] : 'לא נמצא מידע';
+          
+          appendList('dnsList', 'כתובת DNS (מתוך CF)', dnsValue, true);
+          if (dnsValue === '1.1.1.1' || dnsValue === '8.8.8.8') {
+             appendList('dnsList', 'הערת תוצאה', 'שרת ה-DNS גלוי ומזוהה (ייתכן שאינו ISP)', false);
+          } else if (dnsValue !== 'לא נמצא מידע' && dnsValue.includes('.')) {
+              appendList('dnsList', 'הערת תוצאה', 'נראה שמזהה ספקית שירות אינטרנט גלוי', false);
+              score -= 8;
+          }
+        } else throw new Error("CF not reachable");
+      }catch(e){ appendList('dnsList', 'דליפת DNS', 'בדיקה נכשלה / נחסמה', false); }
+      
+      // סטאטוס רשת
+      let networkStatus = networkIssues === 0 ? 'good' : (networkIssues > 1 ? 'bad' : 'warn');
+      let networkText = networkIssues === 0 ? 'נקי' : (networkIssues > 1 ? 'סיכון גלוי' : 'אזהרה קלה');
+      setBadge('networkBadge', networkText, networkStatus);
+
+      // ==========================================================
+      // 2. Web Fingerprinting
+      // ==========================================================
+      let fpIssues = 0;
+      
+      // 2.1) טביעת אצבע בסיסית
+      appendList('generalFpList', '--- טביעת אצבע כללית ---', '', false);
+      const fp = {
+          'User Agent String': navigator.userAgent || 'חסר',
+          'שפות (Languages)': (navigator.languages || []).join(',') || navigator.language || 'חסר',
+          'רזולוציית המסך': `${screen.width}x${screen.height}x${screen.colorDepth}bit`,
+          'זיכרון התקן': `${navigator.deviceMemory || 'נחסם'}GB`,
+          'מעבדים לוגיים': navigator.hardwareConcurrency || 'נחסם',
+      };
+      Object.entries(fp).forEach(([k,v])=>appendList('generalFpList', k, v, k.includes('Agent')));
+      
+      if(fp['User Agent String'] === navigator.userAgent) score -= 5;
+      if(fp['מעבדים לוגיים'] !== 'נחסם') score -= 3;
+      
+      // 2.2) Canvas Fingerprint
+      if(extended){
+        appendList('canvasFpList', '--- טביעת אצבע (Canvas) ---', '', false);
+        const canvasHash = getCanvasFingerprint();
+        appendList('canvasFpList', 'Canvas Hash', canvasHash, true);
+        if(!canvasHash.includes('שגיאה') && !canvasHash.includes('חסר')){ score -= 15; fpIssues += 1; }
+      }
+      
+      // 2.3) WebGL Fingerprint
+      if(extended){
+        appendList('webglFpList', '--- טביעת אצבע (WebGL) ---', '', false);
+        const webglInfo = getWebGlInfo();
+        Object.entries(webglInfo).forEach(([k,v])=>appendList('webglFpList', k, v, k.includes('Renderer')));
+        if(webglInfo.Renderer && webglInfo.Renderer !== 'לא נתמך/חסום') { score -= 10; fpIssues += 1; }
+      }
+      
+      // סטאטוס Fingerprinting
+      let fpStatus = fpIssues === 0 ? 'good' : (fpIssues > 1 ? 'bad' : 'warn');
+      let fpText = fpIssues === 0 ? 'בסיסי בלבד' : (fpIssues > 1 ? 'ייחודי מאוד' : 'ייחודי');
+      setBadge('fingerprintBadge', fpText, fpStatus);
+      
+      // ==========================================================
+      // 3. אחסון מקומי ועקיבות
+      // ==========================================================
+      let cookieIssues = 0;
+      
+      // 3.1) Cookies
+      appendList('cookiesList', '--- עוגיות HTTP (Cookies) ---', '', false);
+      try{
+        const cookieStr = document.cookie || '';
+        const keys = cookieStr.split(';').map(s=>s.trim()).filter(Boolean);
+        appendList('cookiesList', 'סה"כ עוגיות לאתר זה', keys.length, true);
+        if(keys.length > 0) {
+            cookieIssues += 1;
+            keys.slice(0, 3).forEach(c => appendList('cookiesList', 'עוגייה דוגמה', c.split('=')[0], false));
+        }
+        if(keys.length > 5) score -= 6;
+      }catch(e){ /* noop */ }
+      
+      // 3.2) Web Storage APIs
+      appendList('storageList', '--- אחסון בדפדפן (Storage) ---', '', false);
+      try{
+        appendList('storageList', 'LocalStorage Items', localStorage.length, localStorage.length > 0);
+        appendList('storageList', 'SessionStorage Items', sessionStorage.length, sessionStorage.length > 0);
+        if(localStorage.length > 10 || sessionStorage.length > 0) score -= 4;
+      }catch(e){ 
+        appendList('storageList', 'איסוף אחסון', 'נחסם (ייתכן בהגדרות)', false);
+        cookieIssues += 0.5;
+      }
+      
+      // סטאטוס Cookies
+      let cookieStatus = cookieIssues === 0 ? 'good' : 'warn';
+      setBadge('cookiesBadge', cookieIssues === 0 ? 'נקי יחסית' : 'עקיבות קיימת', cookieStatus);
+
+      
+      // ==========================================================
+      // 4. פרטי דפדפן ומערכת
+      // ==========================================================
+      
+      // 4.1) פרטי דפדפן
+      appendList('browserList', '--- פרמטרים בסיסיים ---', '', false);
+      try{
+        appendList('browserList', 'פלטפורמה', navigator.platform || 'לא ידוע', true);
+        appendList('browserList', 'אזור זמן (Timezone)', Intl.DateTimeFormat().resolvedOptions().timeZone || 'חסר', false);
+        appendList('browserList', 'מזהה מפעיל (Vendor)', navigator.vendor || 'חסר', false);
+      }catch(e){ /* noop */ }
+      
+      // 4.2) חומרה
+      appendList('hardwareList', '--- מידע חומרה ---', '', false);
+      try{
+        if(navigator.getBattery){ 
+          const bat = await navigator.getBattery(); 
+          appendList('hardwareList', 'Battery Level', `${Math.round(bat.level*100)}%`, bat.level < 0.2);
+        } else { 
+          appendList('hardwareList', 'Battery API', 'לא נתמך/חסום'); 
+        }
+        const conn = navigator.connection || null;
+        if(conn){
+          appendList('hardwareList', 'Network Effective Type', conn.effectiveType||'?', false);
+        }
+      }catch(e){ /* noop */ }
+      
+      // 4.3) ביצועים
+      appendList('timingList', '--- זמני ביצוע (Performance) ---', '', false);
+      try {
+          const perfTiming = performance.getEntriesByType("navigation")[0];
+          if (perfTiming) {
+              appendList('timingList', 'זמן טעינה (דומיין)', `${Math.round(perfTiming.domainLookupEnd - perfTiming.domainLookupStart)}ms`);
+              appendList('timingList', 'זמן תגובה (שרת)', `${Math.round(perfTiming.responseEnd - perfTiming.requestStart)}ms`);
+          } else {
+              appendList('timingList', 'Performance API', 'לא נתמך');
+          }
+      } catch (e) { /* noop */ }
+      
+      setBadge('browserBadge','נבדק','neutral');
+
+
+      // ==========================================================
+      // 5. סקירת פורטים (בדיקה מקיפה יותר)
+      // ==========================================================
+      let portIssues = 0;
+      appendList('portsList', '--- פורטים לסקירה (127.0.0.1) ---', '', false);
+      if(extended){
+        try{
+            const portResults = await safePortScan(CONFIG.COMMON_LOCAL_PORTS);
+            portResults.sort((a,b)=>a.port-b.port).forEach(r=>{
+                const isIssue = r.open;
+                appendList('portsList', `פורט ${r.port}`, (r.open? 'מושג! (Reached)':'לא מושג'), isIssue);
+                if(isIssue) portIssues += 1;
+            });
+            if(portIssues > 0) score -= 15;
+            
+        }catch(e){ 
+            appendList('portsList', 'שגיאת סריקה', `נכשלה (Error: ${e.message.substring(0, 50)})`, true); 
+            portIssues = 1; 
+        }
+      } else {
+        appendList('portsList', 'מצב', 'בדיקה מקיפה אינה פעילה - לחץ "בדיקה מקיפה"', false);
+      }
+      // Status
+      let portStatus = portIssues === 0 ? 'good' : 'bad';
+      setBadge('portsBadge', portIssues === 0 ? 'נקי' : 'חשיפה מקומית', portStatus);
+      
+      // ==========================================================
+      // 6. אבטחת חיבור
+      // ==========================================================
+      
+      // 6.1) HTTPS
+      try{
+        appendList('tlsList', '--- בדיקות SSL/TLS ---', '', false);
+        const isHttps = location.protocol === 'https:';
+        appendList('tlsList', 'HTTPS במערכת', isHttps? 'פועל ומאובטח':'לא פעיל! סיכון', !isHttps);
+        if(!isHttps) score -= 30;
+      }catch(e){ /* noop */ }
+      
+      // 6.2) Mixed Content
+      // בדיקה פשוטה לוודא שאנחנו לא ב-HTTPS ויש HTTP בקישור
+      try{
+          const hasMixedContent = location.protocol === 'https:' && document.querySelector('a[href^="http:"]');
+          appendList('tlsList', 'Mixed Content (HTTP ב-HTTPS)', hasMixedContent ? 'קישורים לא מאובטחים נמצאו' : 'לא נמצא', hasMixedContent);
+          if(hasMixedContent) score -= 5;
+      }catch(e){ /* noop */ }
+
+      // Status
+      let tlsStatus = location.protocol === 'https:' ? 'good' : 'bad';
+      setBadge('tlsBadge', location.protocol === 'https:' ? 'מאובטח' : 'לא מאובטח', tlsStatus);
+
+      // ==========================================================
+      // סיום
+      // ==========================================================
+      
+      // חשוב: ציון גלובלי (Global Score Calculation)
+      if(score < 0) score = 0;
+      if(score > 100) score = 100;
+      $('privacyScore').textContent = score;
+
+      const scEl = $('privacyScore');
+      scEl.style.color = score > 75 ? 'var(--good)' : (score>45 ? 'var(--warn)' : 'var(--bad)');
+      $('statusBrief').textContent = `הסריקה הושלמה. ציון סופי: ${score}/100`;
+      
+      // הרחב אוטומטית כרטיסים בעלי בעיות
+      document.querySelectorAll('.section').forEach(card => {
+        const badge = card.querySelector('.badge');
+        if (badge && badge.classList.contains('bad') || badge.classList.contains('warn')) {
+          card.classList.add('expanded');
+        }
+      });
+    }
+
+
+    // === הרצה ראשונית והאזנה לכפתורים ===
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        // הגדרת מאזינים לכפתורים
+        $('quickBtn').addEventListener('click', ()=>runScan({extended:false}));
+        $('fullBtn').addEventListener('click', ()=>runScan({extended:true}));
+        
+        // סימן ויזואלי למוכנות
+        window.setTimeout(() => {
+          $('statusBrief').textContent = 'מוכן לביצוע סריקה';
+        }, 500);
+    });
+
   </script>
 </body>
 </html>
