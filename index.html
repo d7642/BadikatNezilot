@@ -1,797 +1,837 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Language Website</title>
-    <style>
-        /* Cookie Consent Banner Styles */
-        .cookie-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #fff;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            z-index: 10000;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            border-top: 3px solid #007bff;
-            font-family: Arial, sans-serif;
-        }
+// CyberScan Pro - Complete Client-Side Implementation
+// Includes: Cookie Management, Dynamic Loading, Carousel, Form Validation, 
+// Lazy Loading, Drag & Drop, Infinite Scroll, Web Animations API
 
-        .cookie-banner.visible {
-            transform: translateY(0);
-        }
+// ==================== COOKIE MANAGEMENT ====================
+document.addEventListener('DOMContentLoaded', function() {
+  const cookieBanner = document.getElementById('cookie-banner');
+  const acceptAllBtn = document.getElementById('accept-all-cookies');
+  const acceptEssentialBtn = document.getElementById('accept-essential-cookies');
+  const customizeBtn = document.getElementById('customize-cookies');
+  
+  // Check if user has already made a cookie choice
+  if (!getCookie('cookie-consent')) {
+    if (cookieBanner) {
+      cookieBanner.classList.remove('hidden');
+    }
+  }
+  
+  // Accept all cookies
+  if (acceptAllBtn) {
+    acceptAllBtn.addEventListener('click', function() {
+      setCookie('cookie-consent', 'all', 365);
+      setCookie('analytics-consent', 'true', 365);
+      setCookie('marketing-consent', 'true', 365);
+      if (cookieBanner) cookieBanner.classList.add('hidden');
+      initializeAnalytics(); // Initialize analytics if needed
+    });
+  }
+  
+  // Accept only essential cookies
+  if (acceptEssentialBtn) {
+    acceptEssentialBtn.addEventListener('click', function() {
+      setCookie('cookie-consent', 'essential', 365);
+      setCookie('analytics-consent', 'false', 365);
+      setCookie('marketing-consent', 'false', 365);
+      if (cookieBanner) cookieBanner.classList.add('hidden');
+    });
+  }
+  
+  // Customize cookie settings
+  if (customizeBtn) {
+    customizeBtn.addEventListener('click', function() {
+      // In a real implementation, this would open a modal with cookie options
+      // For now, we'll treat it as accepting all
+      setCookie('cookie-consent', 'all', 365);
+      setCookie('analytics-consent', 'true', 365);
+      setCookie('marketing-consent', 'true', 365);
+      if (cookieBanner) cookieBanner.classList.add('hidden');
+      initializeAnalytics(); // Initialize analytics if needed
+    });
+  }
+  
+  // Helper functions for cookie management
+  function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+  }
+  
+  function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+  }
+  
+  // Initialize analytics if consent is given
+  function initializeAnalytics() {
+    // This is where you would initialize your analytics service
+    // For example, Google Analytics, etc.
+    if (getCookie('analytics-consent') === 'true') {
+      // Initialize analytics
+      console.log('Analytics initialized');
+    }
+  }
+});
 
-        .banner-content h3 {
-            margin-top: 0;
-            color: #333;
-        }
+// ==================== DYNAMIC CONTENT LOADING ====================
+class DynamicContentLoader {
+  constructor() {
+    this.contentContainer = document.getElementById('main-content');
+    this.loadingIndicator = document.getElementById('loading-indicator');
+    this.init();
+  }
+  
+  init() {
+    // Handle navigation clicks
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-load-page]')) {
+        e.preventDefault();
+        const page = e.target.getAttribute('data-load-page');
+        this.loadPage(page);
+      }
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.page) {
+        this.loadPage(e.state.page, false);
+      }
+    });
+  }
+  
+  async loadPage(page, pushState = true) {
+    try {
+      // Show loading indicator
+      if (this.loadingIndicator) {
+        this.loadingIndicator.style.display = 'block';
+      }
+      
+      // Fetch page content (in a real app, this would be an actual fetch)
+      // For demo purposes, we'll simulate content
+      const html = `<div>
+        <h2>${page.charAt(0).toUpperCase() + page.slice(1)} Page</h2>
+        <p>This content was loaded dynamically without a full page refresh.</p>
+        <button data-load-page="home">Go Home</button>
+      </div>`;
+      
+      // Update content
+      if (this.contentContainer) {
+        this.contentContainer.innerHTML = html;
+      }
+      
+      // Update browser history
+      if (pushState) {
+        history.pushState({ page }, '', `/${page}`);
+      }
+      
+      // Re-initialize any components that need it
+      this.initializeComponents();
+    } catch (error) {
+      console.error('Error loading page:', error);
+      if (this.contentContainer) {
+        this.contentContainer.innerHTML = '<p>Failed to load content. Please try again.</p>';
+      }
+    } finally {
+      // Hide loading indicator
+      if (this.loadingIndicator) {
+        this.loadingIndicator.style.display = 'none';
+      }
+    }
+  }
+  
+  initializeComponents() {
+    // Re-initialize any components that might have been added dynamically
+    initializeForms();
+    initializeCarousels();
+  }
+}
 
-        .cookie-options {
-            margin: 15px 0;
-        }
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  window.contentLoader = new DynamicContentLoader();
+});
 
-        .cookie-category {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-        }
+// ==================== CAROUSEL IMPLEMENTATION ====================
+class Carousel {
+  constructor(element) {
+    this.carousel = element;
+    this.slides = this.carousel.querySelectorAll('.carousel-slide');
+    this.indicators = this.carousel.querySelectorAll('.carousel-indicator');
+    this.prevBtn = this.carousel.querySelector('.carousel-prev');
+    this.nextBtn = this.carousel.querySelector('.carousel-next');
+    this.currentIndex = 0;
+    this.autoPlayInterval = null;
+    
+    this.init();
+  }
+  
+  init() {
+    // Set up initial state
+    this.updateCarousel();
+    
+    // Add event listeners
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener('click', () => this.prevSlide());
+    }
+    
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener('click', () => this.nextSlide());
+    }
+    
+    // Indicator clicks
+    this.indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => this.goToSlide(index));
+    });
+    
+    // Auto-play
+    this.startAutoPlay();
+    
+    // Pause auto-play on hover
+    this.carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
+    this.carousel.addEventListener('mouseleave', () => this.startAutoPlay());
+  }
+  
+  updateCarousel() {
+    // Update slide positions
+    this.slides.forEach((slide, index) => {
+      slide.classList.toggle('active', index === this.currentIndex);
+    });
+    
+    // Update indicators
+    this.indicators.forEach((indicator, index) => {
+      indicator.classList.toggle('active', index === this.currentIndex);
+    });
+  }
+  
+  goToSlide(index) {
+    this.currentIndex = index;
+    this.updateCarousel();
+  }
+  
+  nextSlide() {
+    this.currentIndex = (this.currentIndex + 1) % this.slides.length;
+    this.updateCarousel();
+  }
+  
+  prevSlide() {
+    this.currentIndex = (this.currentIndex - 1 + this.slides.length) % this.slides.length;
+    this.updateCarousel();
+  }
+  
+  startAutoPlay() {
+    this.stopAutoPlay(); // Clear any existing interval
+    this.autoPlayInterval = setInterval(() => {
+      this.nextSlide();
+    }, 5000); // Change slide every 5 seconds
+  }
+  
+  stopAutoPlay() {
+    if (this.autoPlayInterval) {
+      clearInterval(this.autoPlayInterval);
+      this.autoPlayInterval = null;
+    }
+  }
+}
 
-        .cookie-category input {
-            margin-left: 10px;
-        }
+// Initialize all carousels on the page
+function initializeCarousels() {
+  document.querySelectorAll('.carousel').forEach(carousel => {
+    new Carousel(carousel);
+  });
+}
 
-        [dir="ltr"] .cookie-category input {
-            margin-left: 0;
-            margin-right: 10px;
-        }
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeCarousels);
 
-        .cookie-category label {
-            font-weight: 500;
-        }
+// ==================== FORM VALIDATION ====================
+function initializeForms() {
+  // Get all forms with validation
+  const forms = document.querySelectorAll('form[data-validate]');
+  
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      if (!validateForm(this)) {
+        e.preventDefault();
+      }
+    });
+    
+    // Real-time validation on input
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.addEventListener('blur', () => validateField(input));
+      input.addEventListener('input', () => clearFieldError(input));
+    });
+  });
+}
 
-        .warning-message {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 4px;
-            padding: 10px;
-            margin: 15px 0;
-            color: #856404;
-        }
+function validateForm(form) {
+  let isValid = true;
+  const inputs = form.querySelectorAll('input, textarea, select');
+  
+  inputs.forEach(input => {
+    if (!validateField(input)) {
+      isValid = false;
+    }
+  });
+  
+  return isValid;
+}
 
-        .banner-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+function validateField(field) {
+  // Clear any existing error
+  clearFieldError(field);
+  
+  const value = field.value.trim();
+  const isRequired = field.hasAttribute('required');
+  const type = field.getAttribute('type') || field.tagName.toLowerCase();
+  
+  // Check if field is required and empty
+  if (isRequired && !value) {
+    showFieldError(field, 'This field is required');
+    return false;
+  }
+  
+  // Type-specific validation
+  switch (type) {
+    case 'email':
+      if (value && !isValidEmail(value)) {
+        showFieldError(field, 'Please enter a valid email address');
+        return false;
+      }
+      break;
+    case 'url':
+      if (value && !isValidURL(value)) {
+        showFieldError(field, 'Please enter a valid URL');
+        return false;
+      }
+      break;
+    case 'password':
+      if (value && value.length < 8) {
+        showFieldError(field, 'Password must be at least 8 characters');
+        return false;
+      }
+      break;
+    case 'checkbox':
+      if (isRequired && !field.checked) {
+        showFieldError(field, 'This field is required');
+        return false;
+      }
+      break;
+  }
+  
+  // Custom validation patterns
+  const pattern = field.getAttribute('pattern');
+  if (pattern && value) {
+    const regex = new RegExp(pattern);
+    if (!regex.test(value)) {
+      const errorMessage = field.getAttribute('data-error-message') || 'Please enter a valid value';
+      showFieldError(field, errorMessage);
+      return false;
+    }
+  }
+  
+  return true;
+}
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
+function isValidURL(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
+function showFieldError(field, message) {
+  // Add error class
+  field.classList.add('error');
+  
+  // Create or update error message
+  let errorElement = field.parentNode.querySelector('.field-error');
+  if (!errorElement) {
+    errorElement = document.createElement('div');
+    errorElement.className = 'field-error';
+    field.parentNode.appendChild(errorElement);
+  }
+  
+  errorElement.textContent = message;
+}
 
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #6c757d;
-            color: #6c757d;
-        }
+function clearFieldError(field) {
+  field.classList.remove('error');
+  const errorElement = field.parentNode.querySelector('.field-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
+}
 
-        .btn:hover {
-            opacity: 0.9;
-        }
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeForms);
 
-        /* Language Selector Styles */
-        .language-selector {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 9999;
-        }
+// ==================== LAZY LOADING ====================
+class LazyLoader {
+  constructor() {
+    this.imageObserver = null;
+    this.init();
+  }
+  
+  init() {
+    // Check if Intersection Observer is supported
+    if ('IntersectionObserver' in window) {
+      this.imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            this.loadImage(img);
+            observer.unobserve(img);
+          }
+        });
+      }, {
+        rootMargin: '50px 0px' // Load images 50px before they come into view
+      });
+      
+      // Observe all lazy images
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        this.imageObserver.observe(img);
+      });
+    } else {
+      // Fallback for browsers that don't support Intersection Observer
+      this.loadAllImages();
+    }
+  }
+  
+  loadImage(img) {
+    const src = img.getAttribute('data-src');
+    if (src) {
+      img.src = src;
+      img.removeAttribute('data-src');
+      img.classList.add('loaded');
+    }
+  }
+  
+  loadAllImages() {
+    document.querySelectorAll('img[data-src]').forEach(img => {
+      this.loadImage(img);
+    });
+  }
+}
 
-        [dir="ltr"] .language-selector {
-            left: auto;
-            right: 20px;
-        }
+// Initialize lazy loading when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new LazyLoader();
+});
 
-        .language-toggle {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .language-toggle:hover {
-            background: #e9ecef;
-        }
-
-        .language-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 250px;
-            max-height: 300px;
-            overflow: hidden;
-            z-index: 1000;
-            display: none;
-        }
-
-        [dir="ltr"] .language-dropdown {
-            left: auto;
-            right: 0;
-        }
-
-        .language-dropdown.open {
-            display: block;
-        }
-
-        .search-container {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .language-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .language-list li {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f5f5f5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .language-list li:hover {
-            background: #f8f9fa;
-        }
-
-        .language-list li.selected {
-            background: #007bff;
-            color: white;
-        }
-
-        .flag-icon {
-            font-size: 18px;
-        }
-
-        [dir="rtl"] .language-list li {
-            text-align: right;
-        }
-
-        /* Demo Content Styles */
-        .content {
-            max-width: 800px;
-            margin: 100px auto 50px;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-
-        .content h1, .content p {
-            text-align: center;
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .banner-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .language-dropdown {
-                width: 200px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Cookie Consent Banner -->
-    <div id="cookieConsentBanner" class="cookie-banner">
-        <div class="banner-content">
-            <h3 id="cookieTitle">We value your privacy</h3>
-            <p id="cookieDescription">We use cookies to enhance your browsing experience, analyze traffic, and personalize content. You can choose which cookies to accept:</p>
-            
-            <div class="cookie-options">
-                <div class="cookie-category">
-                    <input type="checkbox" id="essential" checked disabled>
-                    <label for="essential" id="essentialLabel">Essential (always required)</label>
-                </div>
-                
-                <div class="cookie-category">
-                    <input type="checkbox" id="analytics" checked>
-                    <label for="analytics" id="analyticsLabel">Analytics (help us improve our site)</label>
-                </div>
-                
-                <div class="cookie-category">
-                    <input type="checkbox" id="marketing" checked>
-                    <label for="marketing" id="marketingLabel">Marketing (personalize ads)</label>
-                </div>
-            </div>
-            
-            <div class="warning-message">
-                <p id="warningText">Note: Disabling certain cookies may affect the accuracy of personalized features and site performance.</p>
-            </div>
-            
-            <div class="banner-actions">
-                <button id="acceptAll" class="btn btn-primary">Accept All</button>
-                <button id="acceptSelected" class="btn btn-secondary">Accept Selected</button>
-                <button id="rejectAll" class="btn btn-outline">Reject All</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Language Selector -->
-    <div class="language-selector">
-        <button id="languageToggle" class="language-toggle">
-            <span id="currentLanguage">עברית</span>
-            <i class="arrow-down">▼</i>
-        </button>
+// ==================== INFINITE SCROLL ====================
+class InfiniteScroll {
+  constructor(container, options = {}) {
+    this.container = container;
+    this.options = {
+      threshold: 0.1,
+      apiUrl: '/api/load-more',
+      ...options
+    };
+    this.isLoading = false;
+    this.hasMore = true;
+    this.page = 1;
+    
+    this.init();
+  }
+  
+  init() {
+    // Create observer
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.isLoading && this.hasMore) {
+            this.loadMore();
+          }
+        });
+      },
+      { threshold: this.options.threshold }
+    );
+    
+    // Observe sentinel element
+    const sentinel = document.createElement('div');
+    sentinel.id = 'infinite-scroll-sentinel';
+    if (this.container) {
+      this.container.appendChild(sentinel);
+      this.observer.observe(sentinel);
+    }
+  }
+  
+  async loadMore() {
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    
+    try {
+      // Show loading indicator
+      const loadingElement = document.createElement('div');
+      loadingElement.id = 'infinite-scroll-loading';
+      loadingElement.textContent = 'Loading more...';
+      if (this.container) {
+        this.container.appendChild(loadingElement);
+      }
+      
+      // Simulate fetching more content
+      // In a real app, you would fetch from an API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Remove loading indicator
+      loadingElement.remove();
+      
+      // Sample data for demo
+      const sampleItems = [
+        { title: 'Vulnerability 1', description: 'Description of vulnerability 1' },
+        { title: 'Vulnerability 2', description: 'Description of vulnerability 2' },
+        { title: 'Vulnerability 3', description: 'Description of vulnerability 3' }
+      ];
+      
+      if (sampleItems.length > 0 && this.page < 3) { // Limit to 3 pages for demo
+        // Add new items to container
+        sampleItems.forEach(item => {
+          const itemElement = this.createItemElement(item);
+          if (this.container) {
+            this.container.insertBefore(itemElement, document.getElementById('infinite-scroll-sentinel'));
+          }
+        });
         
-        <div id="languageDropdown" class="language-dropdown">
-            <div class="search-container">
-                <input type="text" id="languageSearch" placeholder="חיפוש שפה...">
-            </div>
-            <ul id="languageList" class="language-list"></ul>
-        </div>
-    </div>
+        this.page++;
+      } else {
+        // No more items
+        this.hasMore = false;
+        this.showEndMessage();
+      }
+    } catch (error) {
+      console.error('Error loading more items:', error);
+      this.showError();
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  createItemElement(item) {
+    // Create DOM element for item
+    const element = document.createElement('div');
+    element.className = 'infinite-scroll-item';
+    element.innerHTML = `
+      <h3>${item.title}</h3>
+      <p>${item.description}</p>
+    `;
+    return element;
+  }
+  
+  showEndMessage() {
+    const endElement = document.createElement('div');
+    endElement.id = 'infinite-scroll-end';
+    endElement.textContent = 'You have reached the end';
+    if (this.container) {
+      this.container.appendChild(endElement);
+    }
+  }
+  
+  showError() {
+    const errorElement = document.createElement('div');
+    errorElement.id = 'infinite-scroll-error';
+    errorElement.textContent = 'Failed to load more items';
+    if (this.container) {
+      this.container.appendChild(errorElement);
+    }
+  }
+}
 
-    <!-- Demo Content -->
-    <div class="content">
-        <h1 id="welcomeText">ברוכים הבאים לאתרנו</h1>
-        <p id="introText">זה דף הדגמה ל//*[@data-translate="multiLanguage"] אתר עם תרגום לרבות שפות</p>
-        <p id="cookieStatus">מצב עוגיות: לא נקבע</p>
-    </div>
+// Initialize infinite scroll
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('results-container');
+  if (container) {
+    new InfiniteScroll(container);
+  }
+});
 
-    <script>
-        // Main script combining cookie consent and language selector
-        (function() {
-            // Cookie Consent Manager
-            class CookieConsentManager {
-                constructor() {
-                    this.consentKey = 'cookieConsentPreferences';
-                    this.init();
-                }
+// ==================== DRAG AND DROP ====================
+class DragAndDrop {
+  constructor(container) {
+    this.container = container;
+    this.draggedItem = null;
+    this.init();
+  }
+  
+  init() {
+    if (!this.container) return;
+    
+    this.container.addEventListener('dragstart', (e) => this.handleDragStart(e));
+    this.container.addEventListener('dragover', (e) => this.handleDragOver(e));
+    this.container.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+    this.container.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+    this.container.addEventListener('drop', (e) => this.handleDrop(e));
+    this.container.addEventListener('dragend', (e) => this.handleDragEnd(e));
+  }
+  
+  handleDragStart(e) {
+    this.draggedItem = e.target;
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.innerHTML);
+  }
+  
+  handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+  
+  handleDragEnter(e) {
+    e.preventDefault();
+    if (e.target.classList.contains('drop-zone')) {
+      e.target.classList.add('drag-over');
+    }
+  }
+  
+  handleDragLeave(e) {
+    if (e.target.classList.contains('drop-zone')) {
+      e.target.classList.remove('drag-over');
+    }
+  }
+  
+  handleDrop(e) {
+    e.stopPropagation();
+    
+    if (e.target.classList.contains('drop-zone')) {
+      e.target.classList.remove('drag-over');
+      
+      // Add the dragged item to the drop zone
+      const newItem = document.createElement('div');
+      newItem.className = 'draggable-item';
+      newItem.innerHTML = this.draggedItem.innerHTML;
+      newItem.draggable = true;
+      e.target.appendChild(newItem);
+      
+      // Remove the original item
+      this.draggedItem.remove();
+    }
+    
+    return false;
+  }
+  
+  handleDragEnd(e) {
+    if (e.target) {
+      e.target.classList.remove('dragging');
+    }
+    document.querySelectorAll('.drag-over').forEach(zone => {
+      zone.classList.remove('drag-over');
+    });
+  }
+}
 
-                init() {
-                    // Check if consent already exists
-                    const existingConsent = this.getConsent();
-                    
-                    if (!existingConsent) {
-                        // No consent found, show banner
-                        this.showBanner();
-                        this.bindEvents();
-                    } else {
-                        // Consent exists, apply preferences
-                        this.applyConsent(existingConsent);
-                        this.updateCookieStatus(existingConsent);
-                    }
-                }
+// Initialize drag and drop when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.drag-container').forEach(container => {
+    new DragAndDrop(container);
+  });
+});
 
-                showBanner() {
-                    const banner = document.getElementById('cookieConsentBanner');
-                    if (banner) {
-                        // Small delay to ensure DOM is ready
-                        setTimeout(() => {
-                            banner.classList.add('visible');
-                        }, 500);
-                    }
-                }
+// ==================== WEB ANIMATIONS API ====================
+class WebAnimator {
+  constructor() {
+    this.init();
+  }
+  
+  init() {
+    // Animate elements when they come into view
+    document.addEventListener('DOMContentLoaded', () => {
+      this.animateOnScroll();
+    });
+    
+    // Add hover animations to buttons
+    this.addHoverAnimations();
+  }
+  
+  animateOnScroll() {
+    // Create observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          this.animateElement(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    // Observe elements with animation classes
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+      observer.observe(el);
+    });
+  }
+  
+  animateElement(element) {
+    // Different animations based on data attribute
+    const animationType = element.getAttribute('data-animation') || 'fadeIn';
+    
+    let keyframes, options;
+    
+    switch (animationType) {
+      case 'fadeIn':
+        keyframes = [
+          { opacity: 0 },
+          { opacity: 1 }
+        ];
+        options = {
+          duration: 600,
+          easing: 'ease-out'
+        };
+        break;
+        
+      case 'slideInLeft':
+        keyframes = [
+          { transform: 'translateX(-100%)', opacity: 0 },
+          { transform: 'translateX(0)', opacity: 1 }
+        ];
+        options = {
+          duration: 800,
+          easing: 'ease-out'
+        };
+        break;
+        
+      case 'slideInRight':
+        keyframes = [
+          { transform: 'translateX(100%)', opacity: 0 },
+          { transform: 'translateX(0)', opacity: 1 }
+        ];
+        options = {
+          duration: 800,
+          easing: 'ease-out'
+        };
+        break;
+        
+      case 'slideUp':
+        keyframes = [
+          { transform: 'translateY(50px)', opacity: 0 },
+          { transform: 'translateY(0)', opacity: 1 }
+        ];
+        options = {
+          duration: 600,
+          easing: 'ease-out'
+        };
+        break;
+        
+      default:
+        return;
+    }
+    
+    // Check if Web Animations API is supported
+    if (element.animate) {
+      element.animate(keyframes, options);
+    }
+    
+    // Add a class to keep the final state
+    element.classList.add('animated');
+  }
+  
+  addHoverAnimations() {
+    // Add hover animations to buttons
+    document.querySelectorAll('button, .btn').forEach(button => {
+      // Check if Web Animations API is supported
+      if (button.animate) {
+        button.addEventListener('mouseenter', (e) => {
+          e.target.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.05)' }
+          ], {
+            duration: 200,
+            fill: 'forwards'
+          });
+        });
+        
+        button.addEventListener('mouseleave', (e) => {
+          e.target.animate([
+            { transform: 'scale(1.05)' },
+            { transform: 'scale(1)' }
+          ], {
+            duration: 200,
+            fill: 'forwards'
+          });
+        });
+      }
+    });
+  }
+}
 
-                hideBanner() {
-                    const banner = document.getElementById('cookieConsentBanner');
-                    if (banner) {
-                        banner.classList.remove('visible');
-                    }
-                }
+// Initialize web animations when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new WebAnimator();
+});
 
-                bindEvents() {
-                    document.getElementById('acceptAll')?.addEventListener('click', () => {
-                        this.setConsent({
-                            essential: true,
-                            analytics: true,
-                            marketing: true,
-                            timestamp: new Date().toISOString()
-                        });
-                    });
+// ==================== SERVICE WORKER REGISTRATION ====================
+// Check if service workers are supported
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('Service Worker registration failed:', error);
+      });
+  });
+}
 
-                    document.getElementById('acceptSelected')?.addEventListener('click', () => {
-                        this.setConsent({
-                            essential: true,
-                            analytics: document.getElementById('analytics')?.checked || false,
-                            marketing: document.getElementById('marketing')?.checked || false,
-                            timestamp: new Date().toISOString()
-                        });
-                    });
+// ==================== LOCAL/SESSION STORAGE EXAMPLES ====================
+// Example of using localStorage
+function saveUserPreferences(preferences) {
+  try {
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+  } catch (e) {
+    console.error('Failed to save preferences to localStorage', e);
+  }
+}
 
-                    document.getElementById('rejectAll')?.addEventListener('click', () => {
-                        this.setConsent({
-                            essential: true,
-                            analytics: false,
-                            marketing: false,
-                            timestamp: new Date().toISOString()
-                        });
-                    });
-                }
+function getUserPreferences() {
+  try {
+    const preferences = localStorage.getItem('userPreferences');
+    return preferences ? JSON.parse(preferences) : null;
+  } catch (e) {
+    console.error('Failed to retrieve preferences from localStorage', e);
+    return null;
+  }
+}
 
-                setConsent(preferences) {
-                    // Store preferences in localStorage
-                    localStorage.setItem(this.consentKey, JSON.stringify(preferences));
-                    
-                    // Apply the consent settings
-                    this.applyConsent(preferences);
-                    
-                    // Update status display
-                    this.updateCookieStatus(preferences);
-                    
-                    // Hide the banner
-                    this.hideBanner();
-                    
-                    // Dispatch event for other scripts to listen to
-                    window.dispatchEvent(new CustomEvent('cookieConsentUpdated', {
-                        detail: preferences
-                    }));
-                }
+// Example of using sessionStorage
+function saveScanResults(results) {
+  try {
+    sessionStorage.setItem('scanResults', JSON.stringify(results));
+  } catch (e) {
+    console.error('Failed to save scan results to sessionStorage', e);
+  }
+}
 
-                getConsent() {
-                    const consent = localStorage.getItem(this.consentKey);
-                    return consent ? JSON.parse(consent) : null;
-                }
+function getScanResults() {
+  try {
+    const results = sessionStorage.getItem('scanResults');
+    return results ? JSON.parse(results) : null;
+  } catch (e) {
+    console.error('Failed to retrieve scan results from sessionStorage', e);
+    return null;
+  }
+}
 
-                applyConsent(preferences) {
-                    // Apply consent settings to the website functionality
-                    if (preferences.analytics === false) {
-                        // Disable analytics scripts
-                        this.disableScripts('analytics');
-                    }
-                    
-                    if (preferences.marketing === false) {
-                        // Disable marketing scripts
-                        this.disableScripts('marketing');
-                    }
-                    
-                    // Always enable essential cookies
-                    
-                    // Dispatch event for other scripts
-                    window.dispatchEvent(new CustomEvent('cookieConsentApplied', {
-                        detail: preferences
-                    }));
-                }
-
-                disableScripts(category) {
-                    // This is a simplified example. In practice, you would:
-                    // 1. Remove or block specific script tags
-                    // 2. Prevent loading of third-party services
-                    // 3. Clear any existing tracking cookies for that category
-                    
-                    console.log(`Disabling ${category} scripts`);
-                }
-
-                updateCookieStatus(preferences) {
-                    const statusElement = document.getElementById('cookieStatus');
-                    if (statusElement) {
-                        const consent = this.getConsent();
-                        if (consent) {
-                            const analytics = consent.analytics ? 'מאופשר' : 'מושבת';
-                            const marketing = consent.marketing ? 'מאופשר' : 'מושבת';
-                            statusElement.textContent = `מצב עוגיות: אנליטיקה ${analytics}, שיווק ${marketing}`;
-                        } else {
-                            statusElement.textContent = 'מצב עוגיות: לא נקבע';
-                        }
-                    }
-                }
-            }
-
-            // Language Manager
-            class LanguageManager {
-                constructor() {
-                    // List of 40+ popular languages with Hebrew as default
-                    this.languages = [
-                        { code: 'he', name: 'עברית', nativeName: 'עברית', country: 'IL', flag: '🇮🇱' },
-                        { code: 'en', name: 'English', nativeName: 'English', country: 'US', flag: '🇺🇸' },
-                        { code: 'ar', name: 'العربية', nativeName: 'العربية', country: 'SA', flag: '🇸🇦' },
-                        { code: 'es', name: 'Español', nativeName: 'Español', country: 'ES', flag: '🇪🇸' },
-                        { code: 'fr', name: 'Français', nativeName: 'Français', country: 'FR', flag: '🇫🇷' },
-                        { code: 'de', name: 'Deutsch', nativeName: 'Deutsch', country: 'DE', flag: '🇩🇪' },
-                        { code: 'zh', name: '中文', nativeName: '中文', country: 'CN', flag: '🇨🇳' },
-                        { code: 'ja', name: '日本語', nativeName: '日本語', country: 'JP', flag: '🇯🇵' },
-                        { code: 'ko', name: '한국어', nativeName: '한국어', country: 'KR', flag: '🇰🇷' },
-                        { code: 'ru', name: 'Русский', nativeName: 'Русский', country: 'RU', flag: '🇷🇺' },
-                        { code: 'pt', name: 'Português', nativeName: 'Português', country: 'PT', flag: '🇵🇹' },
-                        { code: 'it', name: 'Italiano', nativeName: 'Italiano', country: 'IT', flag: '🇮🇹' },
-                        { code: 'tr', name: 'Türkçe', nativeName: 'Türkçe', country: 'TR', flag: '🇹🇷' },
-                        { code: 'nl', name: 'Nederlands', nativeName: 'Nederlands', country: 'NL', flag: '🇳🇱' },
-                        { code: 'pl', name: 'Polski', nativeName: 'Polski', country: 'PL', flag: '🇵🇱' },
-                        { code: 'uk', name: 'Українська', nativeName: 'Українська', country: 'UA', flag: '🇺🇦' },
-                        { code: 'ro', name: 'Română', nativeName: 'Română', country: 'RO', flag: '🇷🇴' },
-                        { code: 'hu', name: 'Magyar', nativeName: 'Magyar', country: 'HU', flag: '🇭🇺' },
-                        { code: 'cs', name: 'Čeština', nativeName: 'Čeština', country: 'CZ', flag: '🇨🇿' },
-                        { code: 'sv', name: 'Svenska', nativeName: 'Svenska', country: 'SE', flag: '🇸🇪' },
-                        { code: 'da', name: 'Dansk', nativeName: 'Dansk', country: 'DK', flag: '🇩🇰' },
-                        { code: 'fi', name: 'Suomi', nativeName: 'Suomi', country: 'FI', flag: '🇫🇮' },
-                        { code: 'no', name: 'Norsk', nativeName: 'Norsk', country: 'NO', flag: '🇳🇴' },
-                        { code: 'el', name: 'Ελληνικά', nativeName: 'Ελληνικά', country: 'GR', flag: '🇬🇷' },
-                        { code: 'th', name: 'ไทย', nativeName: 'ไทย', country: 'TH', flag: '🇹🇭' },
-                        { code: 'vi', name: 'Tiếng Việt', nativeName: 'Tiếng Việt', country: 'VN', flag: '🇻🇳' },
-                        { code: 'id', name: 'Bahasa Indonesia', nativeName: 'Bahasa Indonesia', country: 'ID', flag: '🇮🇩' },
-                        { code: 'ms', name: 'Bahasa Melayu', nativeName: 'Bahasa Melayu', country: 'MY', flag: '🇲🇾' },
-                        { code: 'hi', name: 'हिन्दी', nativeName: 'हिन्दी', country: 'IN', flag: '🇮🇳' },
-                        { code: 'bn', name: 'বাংলা', nativeName: 'বাংলা', country: 'BD', flag: '🇧🇩' },
-                        { code: 'ur', name: 'اردو', nativeName: 'اردو', country: 'PK', flag: '🇵🇰' },
-                        { code: 'fa', name: 'فارسی', nativeName: 'فارسی', country: 'IR', flag: '🇮🇷' },
-                        { code: 'am', name: 'አማርኛ', nativeName: 'አማርኛ', country: 'ET', flag: '🇪🇹' },
-                        { code: 'sw', name: 'Kiswahili', nativeName: 'Kiswahili', country: 'KE', flag: '🇰🇪' },
-                        { code: 'zu', name: 'isiZulu', nativeName: 'isiZulu', country: 'ZA', flag: '🇿🇦' },
-                        { code: 'af', name: 'Afrikaans', nativeName: 'Afrikaans', country: 'ZA', flag: '🇿🇦' },
-                        { code: 'tl', name: 'Filipino', nativeName: 'Filipino', country: 'PH', flag: '🇵🇭' },
-                        { code: 'my', name: 'မြန်မာ', nativeName: 'မြန်မာ', country: 'MM', flag: '🇲🇲' },
-                        { code: 'km', name: 'ខ្មែរ', nativeName: 'ខ្មែរ', country: 'KH', flag: '🇰🇭' },
-                        { code: 'ne', name: 'नेपाली', nativeName: 'नेपाली', country: 'NP', flag: '🇳🇵' }
-                    ];
-                    
-                    this.currentLanguage = 'he'; // Hebrew as default
-                    this.storageKey = 'userLanguagePreference';
-                    this.translations = this.getTranslations();
-                    this.init();
-                }
-
-                init() {
-                    // Check for saved preference
-                    const savedLanguage = localStorage.getItem(this.storageKey);
-                    if (savedLanguage && this.isValidLanguage(savedLanguage)) {
-                        this.currentLanguage = savedLanguage;
-                    } else {
-                        // Try to detect language based on browser settings
-                        this.detectLanguage();
-                    }
-                    
-                    // Render language selector
-                    this.renderLanguageSelector();
-                    
-                    // Set up event listeners
-                    this.bindEvents();
-                    
-                    // Apply the language
-                    this.applyLanguage();
-                }
-
-                isValidLanguage(languageCode) {
-                    return this.languages.some(lang => lang.code === languageCode);
-                }
-
-                detectLanguage() {
-                    // First check browser language
-                    const browserLang = navigator.language || navigator.userLanguage;
-                    const shortLang = browserLang.split('-')[0];
-                    
-                    if (this.isValidLanguage(shortLang)) {
-                        this.currentLanguage = shortLang;
-                        return;
-                    }
-                    
-                    // If browser language not supported, try country detection
-                    this.detectCountryAndLanguage();
-                }
-
-                async detectCountryAndLanguage() {
-                    try {
-                        // Using a free geo-location API to detect country
-                        const response = await fetch('https://ipapi.co/json/');
-                        const data = await response.json();
-                        
-                        if (data && data.country_code) {
-                            // Find language that matches the country
-                            const countryLanguage = this.languages.find(lang => 
-                                lang.country === data.country_code
-                            );
-                            
-                            if (countryLanguage) {
-                                this.currentLanguage = countryLanguage.code;
-                            }
-                        }
-                    } catch (error) {
-                        console.warn('Could not detect country/language:', error);
-                        // Fall back to Hebrew as default
-                        this.currentLanguage = 'he';
-                    }
-                }
-
-                renderLanguageSelector() {
-                    const languageList = document.getElementById('languageList');
-                    if (!languageList) return;
-                    
-                    languageList.innerHTML = '';
-                    
-                    this.languages.forEach(lang => {
-                        const li = document.createElement('li');
-                        li.dataset.code = lang.code;
-                        
-                        if (lang.code === this.currentLanguage) {
-                            li.classList.add('selected');
-                        }
-                        
-                        // Create flag element
-                        const flagSpan = document.createElement('span');
-                        flagSpan.className = 'flag-icon';
-                        flagSpan.textContent = lang.flag;
-                        
-                        // Create text element
-                        const textSpan = document.createElement('span');
-                        textSpan.textContent = `${lang.nativeName} (${lang.name})`;
-                        
-                        li.appendChild(flagSpan);
-                        li.appendChild(textSpan);
-                        
-                        languageList.appendChild(li);
-                    });
-                    
-                    // Update current language display
-                    const currentLang = this.languages.find(lang => lang.code === this.currentLanguage);
-                    if (currentLang) {
-                        document.getElementById('currentLanguage').textContent = currentLang.nativeName;
-                    }
-                }
-
-                bindEvents() {
-                    const toggleBtn = document.getElementById('languageToggle');
-                    const dropdown = document.getElementById('languageDropdown');
-                    const searchInput = document.getElementById('languageSearch');
-                    
-                    if (toggleBtn) {
-                        toggleBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            dropdown.classList.toggle('open');
-                        });
-                    }
-                    
-                    // Close dropdown when clicking outside
-                    document.addEventListener('click', (e) => {
-                        if (!e.target.closest('.language-selector')) {
-                            dropdown.classList.remove('open');
-                        }
-                    });
-                    
-                    // Language selection
-                    document.getElementById('languageList').addEventListener('click', (e) => {
-                        const li = e.target.closest('li');
-                        if (li) {
-                            const languageCode = li.dataset.code;
-                            this.setLanguage(languageCode);
-                            dropdown.classList.remove('open');
-                        }
-                    });
-                    
-                    // Search functionality
-                    if (searchInput) {
-                        searchInput.addEventListener('input', (e) => {
-                            this.filterLanguages(e.target.value);
-                        });
-                    }
-                }
-
-                filterLanguages(searchTerm) {
-                    const languageItems = document.querySelectorAll('#languageList li');
-                    searchTerm = searchTerm.toLowerCase();
-                    
-                    languageItems.forEach(item => {
-                        const text = item.textContent.toLowerCase();
-                        if (text.includes(searchTerm)) {
-                            item.style.display = '';
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    });
-                }
-
-                setLanguage(languageCode) {
-                    if (!this.isValidLanguage(languageCode)) return;
-                    
-                    this.currentLanguage = languageCode;
-                    
-                    // Save preference
-                    localStorage.setItem(this.storageKey, languageCode);
-                    
-                    // Update UI
-                    this.renderLanguageSelector();
-                    
-                    // Apply language
-                    this.applyLanguage();
-                    
-                    // Trigger event for other components
-                    window.dispatchEvent(new CustomEvent('languageChanged', {
-                        detail: { language: languageCode }
-                    }));
-                }
-
-                applyLanguage() {
-                    // Set language attribute
-                    document.documentElement.lang = this.currentLanguage;
-                    
-                    // Set text direction based on language
-                    if (['he', 'ar', 'fa', 'ur'].includes(this.currentLanguage)) {
-                        document.documentElement.dir = 'rtl';
-                    } else {
-                        document.documentElement.dir = 'ltr';
-                    }
-                    
-                    // Apply translations
-                    this.applyTranslations();
-                }
-
-                getTranslations() {
-                    return {
-                        he: {
-                            cookieTitle: 'אנחנו מעריכים את פרטיותכם',
-                            cookieDescription: 'אנחנו משתמשים בעוגיות כדי לשפר את חוויית הגלישה שלכם, לנתח תעבורה, ולהתאים תוכן. ניתן לבחור אילו עוגיות לקבל:',
-                            essentialLabel: 'עוגיות חיוניות (חובה תמיד)',
-                            analyticsLabel: 'עוגיות אנליטיקה (עוזרות לנו לשפר את האתר)',
-                            marketingLabel: 'עוגיות שיווק (התאמה אישית של פרסומות)',
-                            warningText: 'הערה: השבתת עוגיות מסוימות עלולה להשפיע על דיוק התכונות המותאמות אישית וביצועי האתר.',
-                            acceptAll: 'אישור الكل',
-                            acceptSelected: 'אישור נבחרים',
-                            rejectAll: 'דחייה الكل',
-                            welcomeText: 'ברוכים הבאים לאתרנו',
-                            introText: 'זה דף הדגמה לאתר עם תרגום לרבות שפות',
-                            cookieStatus: 'מצב עוגיות: לא נקבע'
-                        },
-                        en: {
-                            cookieTitle: 'We value your privacy',
-                            cookieDescription: 'We use cookies to enhance your browsing experience, analyze traffic, and personalize content. You can choose which cookies to accept:',
-                            essentialLabel: 'Essential (always required)',
-                            analyticsLabel: 'Analytics (help us improve our site)',
-                            marketingLabel: 'Marketing (personalize ads)',
-                            warningText: 'Note: Disabling certain cookies may affect the accuracy of personalized features and site performance.',
-                            acceptAll: 'Accept All',
-                            acceptSelected: 'Accept Selected',
-                            rejectAll: 'Reject All',
-                            welcomeText: 'Welcome to our website',
-                            introText: 'This is a demo page for a multi-language website',
-                            cookieStatus: 'Cookie status: Not set'
-                        },
-                        es: {
-                            cookieTitle: 'Valoramos su privacidad',
-                            cookieDescription: 'Utilizamos cookies para mejorar su experiencia de navegación, analizar el tráfico y personalizar el contenido. Puede elegir qué cookies aceptar:',
-                            essentialLabel: 'Esenciales (siempre requeridas)',
-                            analyticsLabel: 'Analíticas (nos ayudan a mejorar el sitio)',
-                            marketingLabel: 'Marketing (personalizar anuncios)',
-                            warningText: 'Nota: Deshabilitar ciertas cookies puede afectar la precisión de las funciones personalizadas y el rendimiento del sitio.',
-                            acceptAll: 'Aceptar todo',
-                            acceptSelected: 'Aceptar seleccionados',
-                            rejectAll: 'Rechazar todo',
-                            welcomeText: 'Bienvenido a nuestro sitio web',
-                            introText: 'Esta es una página de demostración para un sitio web multilingüe',
-                            cookieStatus: 'Estado de cookies: No establecido'
-                        },
-                        fr: {
-                            cookieTitle: 'Nous respectons votre vie privée',
-                            cookieDescription: 'Nous utilisons des cookies pour améliorer votre expérience de navigation, analyser le trafic et personnaliser le contenu. Vous pouvez choisir les cookies à accepter :',
-                            essentialLabel: 'Essentiels (toujours nécessaires)',
-                            analyticsLabel: 'Analytiques (nous aident à améliorer le site)',
-                            marketingLabel: 'Marketing (personnaliser les publicités)',
-                            warningText: 'Remarque : Désactiver certains cookies peut affecter la précision des fonctionnalités personnalisées et les performances du site.',
-                            acceptAll: 'Tout accepter',
-                            acceptSelected: 'Accepter la sélection',
-                            rejectAll: 'Tout rejeter',
-                            welcomeText: 'Bienvenue sur notre site web',
-                            introText: "Ceci est une page de démonstration d'un site multilingue",
-                            cookieStatus: 'Statut des cookies : Non défini'
-                        },
-                        ar: {
-                            cookieTitle: 'نحن نقدر خصوصيتك',
-                            cookieDescription: 'نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفح الخاصة بك، وتحليل حركة المرور، وتخصيص المحتوى. يمكنك اختيار ملفات تعريف الارتباط التي تقبلها:',
-                            essentialLabel: 'ضرورية (مطلوبة دائماً)',
-                            analyticsLabel: 'تحليلية (تساعدنا في تحسين الموقع)',
-                            marketingLabel: 'تسويقية (تخصيص الإعلانات)',
-                            warningText: 'ملاحظة: قد يؤدي تعطيل بعض ملفات تعريف الارتباط إلى التأثير على دقة الميزات المخصصة وأداء الموقع.',
-                            acceptAll: 'قبول الكل',
-                            acceptSelected: 'قبول المحددة',
-                            rejectAll: 'رفض الكل',
-                            welcomeText: 'مرحباً بكم في موقعنا',
-                            introText: 'هذه صفحة توضيحية لموقع ويب متعدد اللغات',
-                            cookieStatus: 'حالة ملفات تعريف الارتباط: غير محددة'
-                        },
-                        ru: {
-                            cookieTitle: 'Мы ценим вашу конфиденциальность',
-                            cookieDescription: 'Мы используем файлы cookie для улучшения вашего опыта просмотра, анализа трафика и персонализации контента. Вы можете выбрать, какие файлы cookie принимать:',
-                            essentialLabel: 'Необходимые (всегда требуются)',
-                            analyticsLabel: 'Аналитические (помогают нам улучшить сайт)',
-                            marketingLabel: 'Маркетинговые (персонализировать рекламу)',
-                            warningText: 'Примечание: Отключение определенных файлов cookie может повлиять на точность персонализированных функций и производительность сайта.',
-                            acceptAll: 'Принять все',
-                            acceptSelected: 'Принять выбранные',
-                            rejectAll: 'Отклонить все',
-                            welcomeText: 'Добро пожаловать на наш сайт',
-                            introText: 'Это демонстрационная страница для многоязычного веб-сайта',
-                            cookieStatus: 'Статус файлов cookie: Не установлен'
-                        }
-                    };
-                }
-
-                applyTranslations() {
-                    const translations = this.translations[this.currentLanguage] || this.translations['he'];
-                    
-                    // Update cookie consent banner text
-                    document.getElementById('cookieTitle').textContent = translations.cookieTitle || '';
-                    document.getElementById('cookieDescription').textContent = translations.cookieDescription || '';
-                    document.getElementById('essentialLabel').textContent = translations.essentialLabel || '';
-                    document.getElementById('analyticsLabel').textContent = translations.analyticsLabel || '';
-                    document.getElementById('marketingLabel').textContent = translations.marketingLabel || '';
-                    document.getElementById('warningText').textContent = translations.warningText || '';
-                    document.getElementById('acceptAll').textContent = translations.acceptAll || 'Accept All';
-                    document.getElementById('acceptSelected').textContent = translations.acceptSelected || 'Accept Selected';
-                    document.getElementById('rejectAll').textContent = translations.rejectAll || 'Reject All';
-                    
-                    // Update content text
-                    document.getElementById('welcomeText').textContent = translations.welcomeText || '';
-                    document.getElementById('introText').textContent = translations.introText || '';
-                    
-                    // Update cookie status if consent exists
-                    const consentManager = window.cookieConsentManager;
-                    if (consentManager) {
-                        const consent = consentManager.getConsent();
-                        if (consent) {
-                            consentManager.updateCookieStatus(consent);
-                        }
-                    }
-                }
-            }
-
-            // Initialize when DOM is loaded
-            document.addEventListener('DOMContentLoaded', function() {
-                window.cookieConsentManager = new CookieConsentManager();
-                window.languageManager = new LanguageManager();
-            });
-
-            // Utility functions
-            window.getCurrentLanguage = function() {
-                return window.languageManager ? window.languageManager.currentLanguage : 'he';
-            };
-
-            window.getCookieConsent = function() {
-                const consent = localStorage.getItem('cookieConsentPreferences');
-                return consent ? JSON.parse(consent) : null;
-            };
-        })();
-    </script>
-</body>
-</html>
+// ==================== COMPLETE DOM READY INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('CyberScan Pro client-side functionality initialized');
+  
+  // Initialize all components
+  initializeForms();
+  initializeCarousels();
+  
+  // Initialize other components as needed
+  // Web animations, lazy loading, etc. are initialized in their own modules
+});
