@@ -1,837 +1,1843 @@
-// CyberScan Pro - Complete Client-Side Implementation
-// Includes: Cookie Management, Dynamic Loading, Carousel, Form Validation, 
-// Lazy Loading, Drag & Drop, Infinite Scroll, Web Animations API
-
-// ==================== COOKIE MANAGEMENT ====================
-document.addEventListener('DOMContentLoaded', function() {
-  const cookieBanner = document.getElementById('cookie-banner');
-  const acceptAllBtn = document.getElementById('accept-all-cookies');
-  const acceptEssentialBtn = document.getElementById('accept-essential-cookies');
-  const customizeBtn = document.getElementById('customize-cookies');
-  
-  // Check if user has already made a cookie choice
-  if (!getCookie('cookie-consent')) {
-    if (cookieBanner) {
-      cookieBanner.classList.remove('hidden');
-    }
-  }
-  
-  // Accept all cookies
-  if (acceptAllBtn) {
-    acceptAllBtn.addEventListener('click', function() {
-      setCookie('cookie-consent', 'all', 365);
-      setCookie('analytics-consent', 'true', 365);
-      setCookie('marketing-consent', 'true', 365);
-      if (cookieBanner) cookieBanner.classList.add('hidden');
-      initializeAnalytics(); // Initialize analytics if needed
-    });
-  }
-  
-  // Accept only essential cookies
-  if (acceptEssentialBtn) {
-    acceptEssentialBtn.addEventListener('click', function() {
-      setCookie('cookie-consent', 'essential', 365);
-      setCookie('analytics-consent', 'false', 365);
-      setCookie('marketing-consent', 'false', 365);
-      if (cookieBanner) cookieBanner.classList.add('hidden');
-    });
-  }
-  
-  // Customize cookie settings
-  if (customizeBtn) {
-    customizeBtn.addEventListener('click', function() {
-      // In a real implementation, this would open a modal with cookie options
-      // For now, we'll treat it as accepting all
-      setCookie('cookie-consent', 'all', 365);
-      setCookie('analytics-consent', 'true', 365);
-      setCookie('marketing-consent', 'true', 365);
-      if (cookieBanner) cookieBanner.classList.add('hidden');
-      initializeAnalytics(); // Initialize analytics if needed
-    });
-  }
-  
-  // Helper functions for cookie management
-  function setCookie(name, value, days) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
-  }
-  
-  function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-  }
-  
-  // Initialize analytics if consent is given
-  function initializeAnalytics() {
-    // This is where you would initialize your analytics service
-    // For example, Google Analytics, etc.
-    if (getCookie('analytics-consent') === 'true') {
-      // Initialize analytics
-      console.log('Analytics initialized');
-    }
-  }
-});
-
-// ==================== DYNAMIC CONTENT LOADING ====================
-class DynamicContentLoader {
-  constructor() {
-    this.contentContainer = document.getElementById('main-content');
-    this.loadingIndicator = document.getElementById('loading-indicator');
-    this.init();
-  }
-  
-  init() {
-    // Handle navigation clicks
-    document.addEventListener('click', (e) => {
-      if (e.target.matches('[data-load-page]')) {
-        e.preventDefault();
-        const page = e.target.getAttribute('data-load-page');
-        this.loadPage(page);
-      }
-    });
-    
-    // Handle browser back/forward buttons
-    window.addEventListener('popstate', (e) => {
-      if (e.state && e.state.page) {
-        this.loadPage(e.state.page, false);
-      }
-    });
-  }
-  
-  async loadPage(page, pushState = true) {
-    try {
-      // Show loading indicator
-      if (this.loadingIndicator) {
-        this.loadingIndicator.style.display = 'block';
-      }
-      
-      // Fetch page content (in a real app, this would be an actual fetch)
-      // For demo purposes, we'll simulate content
-      const html = `<div>
-        <h2>${page.charAt(0).toUpperCase() + page.slice(1)} Page</h2>
-        <p>This content was loaded dynamically without a full page refresh.</p>
-        <button data-load-page="home">Go Home</button>
-      </div>`;
-      
-      // Update content
-      if (this.contentContainer) {
-        this.contentContainer.innerHTML = html;
-      }
-      
-      // Update browser history
-      if (pushState) {
-        history.pushState({ page }, '', `/${page}`);
-      }
-      
-      // Re-initialize any components that need it
-      this.initializeComponents();
-    } catch (error) {
-      console.error('Error loading page:', error);
-      if (this.contentContainer) {
-        this.contentContainer.innerHTML = '<p>Failed to load content. Please try again.</p>';
-      }
-    } finally {
-      // Hide loading indicator
-      if (this.loadingIndicator) {
-        this.loadingIndicator.style.display = 'none';
-      }
-    }
-  }
-  
-  initializeComponents() {
-    // Re-initialize any components that might have been added dynamically
-    initializeForms();
-    initializeCarousels();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  window.contentLoader = new DynamicContentLoader();
-});
-
-// ==================== CAROUSEL IMPLEMENTATION ====================
-class Carousel {
-  constructor(element) {
-    this.carousel = element;
-    this.slides = this.carousel.querySelectorAll('.carousel-slide');
-    this.indicators = this.carousel.querySelectorAll('.carousel-indicator');
-    this.prevBtn = this.carousel.querySelector('.carousel-prev');
-    this.nextBtn = this.carousel.querySelector('.carousel-next');
-    this.currentIndex = 0;
-    this.autoPlayInterval = null;
-    
-    this.init();
-  }
-  
-  init() {
-    // Set up initial state
-    this.updateCarousel();
-    
-    // Add event listeners
-    if (this.prevBtn) {
-      this.prevBtn.addEventListener('click', () => this.prevSlide());
-    }
-    
-    if (this.nextBtn) {
-      this.nextBtn.addEventListener('click', () => this.nextSlide());
-    }
-    
-    // Indicator clicks
-    this.indicators.forEach((indicator, index) => {
-      indicator.addEventListener('click', () => this.goToSlide(index));
-    });
-    
-    // Auto-play
-    this.startAutoPlay();
-    
-    // Pause auto-play on hover
-    this.carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
-    this.carousel.addEventListener('mouseleave', () => this.startAutoPlay());
-  }
-  
-  updateCarousel() {
-    // Update slide positions
-    this.slides.forEach((slide, index) => {
-      slide.classList.toggle('active', index === this.currentIndex);
-    });
-    
-    // Update indicators
-    this.indicators.forEach((indicator, index) => {
-      indicator.classList.toggle('active', index === this.currentIndex);
-    });
-  }
-  
-  goToSlide(index) {
-    this.currentIndex = index;
-    this.updateCarousel();
-  }
-  
-  nextSlide() {
-    this.currentIndex = (this.currentIndex + 1) % this.slides.length;
-    this.updateCarousel();
-  }
-  
-  prevSlide() {
-    this.currentIndex = (this.currentIndex - 1 + this.slides.length) % this.slides.length;
-    this.updateCarousel();
-  }
-  
-  startAutoPlay() {
-    this.stopAutoPlay(); // Clear any existing interval
-    this.autoPlayInterval = setInterval(() => {
-      this.nextSlide();
-    }, 5000); // Change slide every 5 seconds
-  }
-  
-  stopAutoPlay() {
-    if (this.autoPlayInterval) {
-      clearInterval(this.autoPlayInterval);
-      this.autoPlayInterval = null;
-    }
-  }
-}
-
-// Initialize all carousels on the page
-function initializeCarousels() {
-  document.querySelectorAll('.carousel').forEach(carousel => {
-    new Carousel(carousel);
-  });
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeCarousels);
-
-// ==================== FORM VALIDATION ====================
-function initializeForms() {
-  // Get all forms with validation
-  const forms = document.querySelectorAll('form[data-validate]');
-  
-  forms.forEach(form => {
-    form.addEventListener('submit', function(e) {
-      if (!validateForm(this)) {
-        e.preventDefault();
-      }
-    });
-    
-    // Real-time validation on input
-    const inputs = form.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-      input.addEventListener('blur', () => validateField(input));
-      input.addEventListener('input', () => clearFieldError(input));
-    });
-  });
-}
-
-function validateForm(form) {
-  let isValid = true;
-  const inputs = form.querySelectorAll('input, textarea, select');
-  
-  inputs.forEach(input => {
-    if (!validateField(input)) {
-      isValid = false;
-    }
-  });
-  
-  return isValid;
-}
-
-function validateField(field) {
-  // Clear any existing error
-  clearFieldError(field);
-  
-  const value = field.value.trim();
-  const isRequired = field.hasAttribute('required');
-  const type = field.getAttribute('type') || field.tagName.toLowerCase();
-  
-  // Check if field is required and empty
-  if (isRequired && !value) {
-    showFieldError(field, 'This field is required');
-    return false;
-  }
-  
-  // Type-specific validation
-  switch (type) {
-    case 'email':
-      if (value && !isValidEmail(value)) {
-        showFieldError(field, 'Please enter a valid email address');
-        return false;
-      }
-      break;
-    case 'url':
-      if (value && !isValidURL(value)) {
-        showFieldError(field, 'Please enter a valid URL');
-        return false;
-      }
-      break;
-    case 'password':
-      if (value && value.length < 8) {
-        showFieldError(field, 'Password must be at least 8 characters');
-        return false;
-      }
-      break;
-    case 'checkbox':
-      if (isRequired && !field.checked) {
-        showFieldError(field, 'This field is required');
-        return false;
-      }
-      break;
-  }
-  
-  // Custom validation patterns
-  const pattern = field.getAttribute('pattern');
-  if (pattern && value) {
-    const regex = new RegExp(pattern);
-    if (!regex.test(value)) {
-      const errorMessage = field.getAttribute('data-error-message') || 'Please enter a valid value';
-      showFieldError(field, errorMessage);
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function isValidURL(url) {
-  try {
-    new URL(url);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function showFieldError(field, message) {
-  // Add error class
-  field.classList.add('error');
-  
-  // Create or update error message
-  let errorElement = field.parentNode.querySelector('.field-error');
-  if (!errorElement) {
-    errorElement = document.createElement('div');
-    errorElement.className = 'field-error';
-    field.parentNode.appendChild(errorElement);
-  }
-  
-  errorElement.textContent = message;
-}
-
-function clearFieldError(field) {
-  field.classList.remove('error');
-  const errorElement = field.parentNode.querySelector('.field-error');
-  if (errorElement) {
-    errorElement.remove();
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeForms);
-
-// ==================== LAZY LOADING ====================
-class LazyLoader {
-  constructor() {
-    this.imageObserver = null;
-    this.init();
-  }
-  
-  init() {
-    // Check if Intersection Observer is supported
-    if ('IntersectionObserver' in window) {
-      this.imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            this.loadImage(img);
-            observer.unobserve(img);
-          }
-        });
-      }, {
-        rootMargin: '50px 0px' // Load images 50px before they come into view
-      });
-      
-      // Observe all lazy images
-      document.querySelectorAll('img[data-src]').forEach(img => {
-        this.imageObserver.observe(img);
-      });
-    } else {
-      // Fallback for browsers that don't support Intersection Observer
-      this.loadAllImages();
-    }
-  }
-  
-  loadImage(img) {
-    const src = img.getAttribute('data-src');
-    if (src) {
-      img.src = src;
-      img.removeAttribute('data-src');
-      img.classList.add('loaded');
-    }
-  }
-  
-  loadAllImages() {
-    document.querySelectorAll('img[data-src]').forEach(img => {
-      this.loadImage(img);
-    });
-  }
-}
-
-// Initialize lazy loading when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  new LazyLoader();
-});
-
-// ==================== INFINITE SCROLL ====================
-class InfiniteScroll {
-  constructor(container, options = {}) {
-    this.container = container;
-    this.options = {
-      threshold: 0.1,
-      apiUrl: '/api/load-more',
-      ...options
-    };
-    this.isLoading = false;
-    this.hasMore = true;
-    this.page = 1;
-    
-    this.init();
-  }
-  
-  init() {
-    // Create observer
-    this.observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !this.isLoading && this.hasMore) {
-            this.loadMore();
-          }
-        });
-      },
-      { threshold: this.options.threshold }
-    );
-    
-    // Observe sentinel element
-    const sentinel = document.createElement('div');
-    sentinel.id = 'infinite-scroll-sentinel';
-    if (this.container) {
-      this.container.appendChild(sentinel);
-      this.observer.observe(sentinel);
-    }
-  }
-  
-  async loadMore() {
-    if (this.isLoading) return;
-    
-    this.isLoading = true;
-    
-    try {
-      // Show loading indicator
-      const loadingElement = document.createElement('div');
-      loadingElement.id = 'infinite-scroll-loading';
-      loadingElement.textContent = 'Loading more...';
-      if (this.container) {
-        this.container.appendChild(loadingElement);
-      }
-      
-      // Simulate fetching more content
-      // In a real app, you would fetch from an API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove loading indicator
-      loadingElement.remove();
-      
-      // Sample data for demo
-      const sampleItems = [
-        { title: 'Vulnerability 1', description: 'Description of vulnerability 1' },
-        { title: 'Vulnerability 2', description: 'Description of vulnerability 2' },
-        { title: 'Vulnerability 3', description: 'Description of vulnerability 3' }
-      ];
-      
-      if (sampleItems.length > 0 && this.page < 3) { // Limit to 3 pages for demo
-        // Add new items to container
-        sampleItems.forEach(item => {
-          const itemElement = this.createItemElement(item);
-          if (this.container) {
-            this.container.insertBefore(itemElement, document.getElementById('infinite-scroll-sentinel'));
-          }
-        });
-        
-        this.page++;
-      } else {
-        // No more items
-        this.hasMore = false;
-        this.showEndMessage();
-      }
-    } catch (error) {
-      console.error('Error loading more items:', error);
-      this.showError();
-    } finally {
-      this.isLoading = false;
-    }
-  }
-  
-  createItemElement(item) {
-    // Create DOM element for item
-    const element = document.createElement('div');
-    element.className = 'infinite-scroll-item';
-    element.innerHTML = `
-      <h3>${item.title}</h3>
-      <p>${item.description}</p>
-    `;
-    return element;
-  }
-  
-  showEndMessage() {
-    const endElement = document.createElement('div');
-    endElement.id = 'infinite-scroll-end';
-    endElement.textContent = 'You have reached the end';
-    if (this.container) {
-      this.container.appendChild(endElement);
-    }
-  }
-  
-  showError() {
-    const errorElement = document.createElement('div');
-    errorElement.id = 'infinite-scroll-error';
-    errorElement.textContent = 'Failed to load more items';
-    if (this.container) {
-      this.container.appendChild(errorElement);
-    }
-  }
-}
-
-// Initialize infinite scroll
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('results-container');
-  if (container) {
-    new InfiniteScroll(container);
-  }
-});
-
-// ==================== DRAG AND DROP ====================
-class DragAndDrop {
-  constructor(container) {
-    this.container = container;
-    this.draggedItem = null;
-    this.init();
-  }
-  
-  init() {
-    if (!this.container) return;
-    
-    this.container.addEventListener('dragstart', (e) => this.handleDragStart(e));
-    this.container.addEventListener('dragover', (e) => this.handleDragOver(e));
-    this.container.addEventListener('dragenter', (e) => this.handleDragEnter(e));
-    this.container.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-    this.container.addEventListener('drop', (e) => this.handleDrop(e));
-    this.container.addEventListener('dragend', (e) => this.handleDragEnd(e));
-  }
-  
-  handleDragStart(e) {
-    this.draggedItem = e.target;
-    e.target.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.innerHTML);
-  }
-  
-  handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    return false;
-  }
-  
-  handleDragEnter(e) {
-    e.preventDefault();
-    if (e.target.classList.contains('drop-zone')) {
-      e.target.classList.add('drag-over');
-    }
-  }
-  
-  handleDragLeave(e) {
-    if (e.target.classList.contains('drop-zone')) {
-      e.target.classList.remove('drag-over');
-    }
-  }
-  
-  handleDrop(e) {
-    e.stopPropagation();
-    
-    if (e.target.classList.contains('drop-zone')) {
-      e.target.classList.remove('drag-over');
-      
-      // Add the dragged item to the drop zone
-      const newItem = document.createElement('div');
-      newItem.className = 'draggable-item';
-      newItem.innerHTML = this.draggedItem.innerHTML;
-      newItem.draggable = true;
-      e.target.appendChild(newItem);
-      
-      // Remove the original item
-      this.draggedItem.remove();
-    }
-    
-    return false;
-  }
-  
-  handleDragEnd(e) {
-    if (e.target) {
-      e.target.classList.remove('dragging');
-    }
-    document.querySelectorAll('.drag-over').forEach(zone => {
-      zone.classList.remove('drag-over');
-    });
-  }
-}
-
-// Initialize drag and drop when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.drag-container').forEach(container => {
-    new DragAndDrop(container);
-  });
-});
-
-// ==================== WEB ANIMATIONS API ====================
-class WebAnimator {
-  constructor() {
-    this.init();
-  }
-  
-  init() {
-    // Animate elements when they come into view
-    document.addEventListener('DOMContentLoaded', () => {
-      this.animateOnScroll();
-    });
-    
-    // Add hover animations to buttons
-    this.addHoverAnimations();
-  }
-  
-  animateOnScroll() {
-    // Create observer for scroll animations
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          this.animateElement(entry.target);
-          observer.unobserve(entry.target);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberScan Pro - Advanced Security Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ==================== BASE STYLES ==================== */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
         }
-      });
-    }, { threshold: 0.1 });
-    
-    // Observe elements with animation classes
-    document.querySelectorAll('.animate-on-scroll').forEach(el => {
-      observer.observe(el);
-    });
-  }
-  
-  animateElement(element) {
-    // Different animations based on data attribute
-    const animationType = element.getAttribute('data-animation') || 'fadeIn';
-    
-    let keyframes, options;
-    
-    switch (animationType) {
-      case 'fadeIn':
-        keyframes = [
-          { opacity: 0 },
-          { opacity: 1 }
-        ];
-        options = {
-          duration: 600,
-          easing: 'ease-out'
-        };
-        break;
         
-      case 'slideInLeft':
-        keyframes = [
-          { transform: 'translateX(-100%)', opacity: 0 },
-          { transform: 'translateX(0)', opacity: 1 }
-        ];
-        options = {
-          duration: 800,
-          easing: 'ease-out'
-        };
-        break;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-      case 'slideInRight':
-        keyframes = [
-          { transform: 'translateX(100%)', opacity: 0 },
-          { transform: 'translateX(0)', opacity: 1 }
-        ];
-        options = {
-          duration: 800,
-          easing: 'ease-out'
-        };
-        break;
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
         
-      case 'slideUp':
-        keyframes = [
-          { transform: 'translateY(50px)', opacity: 0 },
-          { transform: 'translateY(0)', opacity: 1 }
-        ];
-        options = {
-          duration: 600,
-          easing: 'ease-out'
-        };
-        break;
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
         
-      default:
-        return;
-    }
-    
-    // Check if Web Animations API is supported
-    if (element.animate) {
-      element.animate(keyframes, options);
-    }
-    
-    // Add a class to keep the final state
-    element.classList.add('animated');
-  }
-  
-  addHoverAnimations() {
-    // Add hover animations to buttons
-    document.querySelectorAll('button, .btn').forEach(button => {
-      // Check if Web Animations API is supported
-      if (button.animate) {
-        button.addEventListener('mouseenter', (e) => {
-          e.target.animate([
-            { transform: 'scale(1)' },
-            { transform: 'scale(1.05)' }
-          ], {
-            duration: 200,
-            fill: 'forwards'
-          });
+        header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        
+        .logo i {
+            color: var(--primary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+        
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        
+        nav a:hover {
+            color: var(--secondary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.9)), 
+                        url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            margin: 30px 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: #cbd5e1;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: #0da271;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        section {
+            margin: 50px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            position: relative;
+        }
+        
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--secondary);
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+        
+        /* ==================== COOKIE BANNER ==================== */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #333;
+            color: white;
+            padding: 20px;
+            z-index: 10000;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .cookie-banner.hidden {
+            transform: translateY(100%);
+        }
+        
+        .cookie-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .cookie-content p {
+            flex: 1;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .cookie-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-options button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0da271;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #666;
+            color: white;
+        }
+        
+        .btn-outline:hover {
+            background: #555;
+        }
+        
+        .cookie-warning {
+            flex: 100%;
+            background: #ffeb3b;
+            color: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .cookie-warning p {
+            margin: 0;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .cookie-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .cookie-options {
+                justify-content: center;
+            }
+        }
+        
+        /* ==================== CAROUSEL ==================== */
+        .carousel {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .carousel-container {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            display: none;
+        }
+        
+        .carousel-slide.active {
+            display: block;
+        }
+        
+        .feature-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .feature-card h3 {
+            margin-top: 0;
+            color: var(--secondary);
+            font-size: 1.8rem;
+        }
+        
+        .feature-card p {
+            color: #cbd5e1;
+            flex-grow: 1;
+            font-size: 1.1rem;
+            max-width: 500px;
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .carousel-controls {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        
+        .carousel-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+        
+        .carousel-indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .carousel-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .carousel-indicator.active {
+            background: var(--secondary);
+            transform: scale(1.2);
+        }
+        
+        /* ==================== FORM STYLES ==================== */
+        .scan-form {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 30px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: rgba(15, 23, 42, 0.5);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+        
+        .field-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        input.error,
+        textarea.error,
+        select.error {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
+        
+        /* ==================== FEATURES GRID ==================== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .feature-box {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-box i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .feature-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        /* ==================== DRAG & DROP ==================== */
+        .drag-container {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 40px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .draggable-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            cursor: move;
+            transition: all 0.3s;
+        }
+        
+        .draggable-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--secondary);
+        }
+        
+        .draggable-item.dragging {
+            opacity: 0.5;
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .drop-zone {
+            min-height: 150px;
+            padding: 25px;
+            border: 2px dashed #475569;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: rgba(15, 23, 42, 0.3);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: var(--secondary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+        
+        /* ==================== INFINITE SCROLL ==================== */
+        .results-container {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 40px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .vulnerability-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .vulnerability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .vulnerability-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--danger);
+        }
+        
+        .severity {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .severity.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+        }
+        
+        .severity.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fde68a;
+        }
+        
+        .severity.low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+        }
+        
+        .vulnerability-description {
+            color: #cbd5e1;
+            margin-bottom: 15px;
+        }
+        
+        .vulnerability-details {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        #infinite-scroll-loading, #infinite-scroll-end, #infinite-scroll-error {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+        }
+        
+        #infinite-scroll-sentinel {
+            height: 10px;
+        }
+        
+        /* ==================== ANIMATIONS ==================== */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* ==================== FOOTER ==================== */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            color: var(--gray);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            color: var(--gray);
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .social-links a:hover {
+            color: var(--secondary);
+        }
+        
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            nav ul {
+                gap: 10px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner hidden">
+        <div class="cookie-content">
+            <p>This website uses cookies to ensure you get the best experience. Some cookies are essential for the site to function properly, while others help us understand how you use our services.</p>
+            <div class="cookie-options">
+                <button id="accept-all-cookies" class="btn-primary">Accept All Cookies</button>
+                <button id="accept-essential-cookies" class="btn-outline">Accept Only Essential</button>
+                <button id="customize-cookies" class="btn-outline">Customize Settings</button>
+            </div>
+            <div class="cookie-warning">
+                <p>Note: Declining non-essential cookies may affect the accuracy of your scan results.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>CyberScan Pro</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" data-load-page="home">Home</a></li>
+                    <li><a href="#" data-load-page="features">Features</a></li>
+                    <li><a href="#" data-load-page="pricing">Pricing</a></li>
+                    <li><a href="#" data-load-page="contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="main-content" class="container">
+        <!-- Hero Section -->
+        <section class="hero animate-on-scroll">
+            <h1>Advanced Security Scanning</h1>
+            <p>Protect your digital assets with our cutting-edge security scanner. Detect vulnerabilities before they become threats.</p>
+            <a href="#scan-form" class="btn btn-secondary">Start Free Scan</a>
+        </section>
+
+        <!-- Features Carousel -->
+        <section class="animate-on-scroll">
+            <h2 class="section-title">Key Features</h2>
+            <div class="carousel">
+                <div class="carousel-container">
+                    <div class="carousel-slide active">
+                        <div class="feature-card">
+                            <div class="feature-icon">🛡️</div>
+                            <h3>Advanced Threat Detection</h3>
+                            <p>Our AI-powered scanner identifies vulnerabilities that traditional tools miss. Get comprehensive reports with actionable insights.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Lightning Fast Scans</h3>
+                            <p>Get comprehensive security reports in minutes, not hours. Our optimized scanning engine delivers results quickly and efficiently.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Detailed Analytics</h3>
+                            <p>Understand your security posture with actionable insights. Track vulnerabilities over time with our comprehensive dashboard.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-controls">
+                    <button class="carousel-btn carousel-prev">‹</button>
+                    <button class="carousel-btn carousel-next">›</button>
+                </div>
+                <div class="carousel-indicators">
+                    <span class="carousel-indicator active"></span>
+                    <span class="carousel-indicator"></span>
+                    <span class="carousel-indicator"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scan Form -->
+        <section id="scan-form" class="animate-on-scroll">
+            <h2 class="section-title">Scan Your Website</h2>
+            <form class="scan-form" data-validate>
+                <div class="form-group">
+                    <label for="website-url">Website URL</label>
+                    <input type="url" id="website-url" name="website-url" required placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email (for report)</label>
+                    <input type="email" id="email" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="scan-type">Scan Type</label>
+                    <select id="scan-type" name="scan-type">
+                        <option value="basic">Basic Scan</option>
+                        <option value="comprehensive">Comprehensive Scan</option>
+                        <option value="deep">Deep Scan</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Start Security Scan</button>
+            </form>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="animate-on-scroll">
+            <h2 class="section-title">Why Choose CyberScan Pro?</h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <i class="fas fa-bug"></i>
+                    <h3>Vulnerability Detection</h3>
+                    <p>Identify security flaws before attackers do with our comprehensive scanning engine.</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Real-time Monitoring</h3>
+                    <p>Continuously monitor your assets for new threats and vulnerabilities as they emerge.</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Detailed Reports</h3>
+                    <p>Get comprehensive reports with remediation steps for each identified vulnerability.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Drag and Drop Example -->
+        <section class="animate-on-scroll">
+            <h2 class="section-title">Organize Vulnerabilities</h2>
+            <div class="drag-container">
+                <p>Drag and drop vulnerabilities to prioritize them for remediation:</p>
+                <div class="draggable-item" draggable="true">
+                    <strong>Critical Vulnerability</strong> - SQL Injection in login form
+                </div>
+                <div class="draggable-item" draggable="true">
+                    <strong>High Risk</strong> - Outdated CMS version
+                </div>
+                <div class="draggable-item" draggable="true">
+                    <strong>Medium Risk</strong> - Missing security headers
+                </div>
+                <div class="draggable-item" draggable="true">
+                    <strong>Low Risk</strong> - Weak password policy
+                </div>
+                
+                <div class="drop-zone">
+                    <i class="fas fa-arrow-down"></i>
+                    <h3>Remediation Priority</h3>
+                    <p>Drop items here to mark them as high priority</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section with Infinite Scroll -->
+        <section class="animate-on-scroll">
+            <h2 class="section-title">Sample Vulnerability Results</h2>
+            <div id="results-container" class="results-container">
+                <div class="vulnerability-card">
+                    <div class="vulnerability-header">
+                        <div class="vulnerability-title">Cross-Site Scripting (XSS)</div>
+                        <div class="severity high">High</div>
+                    </div>
+                    <div class="vulnerability-description">
+                        Reflected XSS vulnerability found in search parameter. An attacker could inject malicious scripts that would execute in the context of other users.
+                    </div>
+                    <div class="vulnerability-details">
+                        <div><i class="fas fa-map-marker-alt"></i> /search?q=</div>
+                        <div><i class="fas fa-code"></i> Parameter: q</div>
+                    </div>
+                </div>
+                
+                <div class="vulnerability-card">
+                    <div class="vulnerability-header">
+                        <div class="vulnerability-title">Missing Security Headers</div>
+                        <div class="severity medium">Medium</div>
+                    </div>
+                    <div class="vulnerability-description">
+                        Several security headers are missing that could help protect against various attacks including XSS, clickjacking, and MIME-type sniffing.
+                    </div>
+                    <div class="vulnerability-details">
+                        <div><i class="fas fa-server"></i> HTTP Response Headers</div>
+                        <div><i class="fas fa-exclamation-triangle"></i> X-Content-Type-Options</div>
+                    </div>
+                </div>
+                
+                <div class="vulnerability-card">
+                    <div class="vulnerability-header">
+                        <div class="vulnerability-title">Weak SSL Configuration</div>
+                        <div class="severity medium">Medium</div>
+                    </div>
+                    <div class="vulnerability-description">
+                        SSL certificate is valid but configuration allows weak cryptographic protocols that could be exploited.
+                    </div>
+                    <div class="vulnerability-details">
+                        <div><i class="fas fa-lock"></i> TLS 1.0/1.1 enabled</div>
+                        <div><i class="fas fa-shield-alt"></i> Weak cipher suites</div>
+                    </div>
+                </div>
+                
+                <div id="infinite-scroll-sentinel"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" style="display: none; text-align: center; padding: 20px;">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Loading content...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <p>&copy; 2023 CyberScan Pro. All rights reserved.</p>
+            <p>Advanced Security Solutions for the Modern Web</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== COOKIE MANAGEMENT ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            const cookieBanner = document.getElementById('cookie-banner');
+            const acceptAllBtn = document.getElementById('accept-all-cookies');
+            const acceptEssentialBtn = document.getElementById('accept-essential-cookies');
+            const customizeBtn = document.getElementById('customize-cookies');
+            
+            // Check if user has already made a cookie choice
+            if (!getCookie('cookie-consent')) {
+                if (cookieBanner) {
+                    cookieBanner.classList.remove('hidden');
+                }
+            }
+            
+            // Accept all cookies
+            if (acceptAllBtn) {
+                acceptAllBtn.addEventListener('click', function() {
+                    setCookie('cookie-consent', 'all', 365);
+                    setCookie('analytics-consent', 'true', 365);
+                    setCookie('marketing-consent', 'true', 365);
+                    if (cookieBanner) cookieBanner.classList.add('hidden');
+                    initializeAnalytics(); // Initialize analytics if needed
+                });
+            }
+            
+            // Accept only essential cookies
+            if (acceptEssentialBtn) {
+                acceptEssentialBtn.addEventListener('click', function() {
+                    setCookie('cookie-consent', 'essential', 365);
+                    setCookie('analytics-consent', 'false', 365);
+                    setCookie('marketing-consent', 'false', 365);
+                    if (cookieBanner) cookieBanner.classList.add('hidden');
+                });
+            }
+            
+            // Customize cookie settings
+            if (customizeBtn) {
+                customizeBtn.addEventListener('click', function() {
+                    // In a real implementation, this would open a modal with cookie options
+                    // For now, we'll treat it as accepting all
+                    setCookie('cookie-consent', 'all', 365);
+                    setCookie('analytics-consent', 'true', 365);
+                    setCookie('marketing-consent', 'true', 365);
+                    if (cookieBanner) cookieBanner.classList.add('hidden');
+                    initializeAnalytics(); // Initialize analytics if needed
+                });
+            }
+            
+            // Helper functions for cookie management
+            function setCookie(name, value, days) {
+                const expires = new Date();
+                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+            }
+            
+            function getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for(let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            }
+            
+            // Initialize analytics if consent is given
+            function initializeAnalytics() {
+                // This is where you would initialize your analytics service
+                // For example, Google Analytics, etc.
+                if (getCookie('analytics-consent') === 'true') {
+                    // Initialize analytics
+                    console.log('Analytics initialized');
+                }
+            }
         });
-        
-        button.addEventListener('mouseleave', (e) => {
-          e.target.animate([
-            { transform: 'scale(1.05)' },
-            { transform: 'scale(1)' }
-          ], {
-            duration: 200,
-            fill: 'forwards'
-          });
+
+        // ==================== DYNAMIC CONTENT LOADING ====================
+        class DynamicContentLoader {
+            constructor() {
+                this.contentContainer = document.getElementById('main-content');
+                this.loadingIndicator = document.getElementById('loading-indicator');
+                this.init();
+            }
+            
+            init() {
+                // Handle navigation clicks
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('[data-load-page]')) {
+                        e.preventDefault();
+                        const page = e.target.getAttribute('data-load-page');
+                        this.loadPage(page);
+                    }
+                });
+                
+                // Handle browser back/forward buttons
+                window.addEventListener('popstate', (e) => {
+                    if (e.state && e.state.page) {
+                        this.loadPage(e.state.page, false);
+                    }
+                });
+            }
+            
+            async loadPage(page, pushState = true) {
+                try {
+                    // Show loading indicator
+                    if (this.loadingIndicator) {
+                        this.loadingIndicator.style.display = 'block';
+                    }
+                    
+                    // Simulate loading delay
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    
+                    // For demo purposes, we'll create content based on page
+                    let html = '';
+                    switch(page) {
+                        case 'features':
+                            html = `
+                                <section class="hero">
+                                    <h1>Powerful Security Features</h1>
+                                    <p>Our advanced security scanner includes everything you need to protect your digital assets.</p>
+                                </section>
+                                
+                                <section>
+                                    <h2 class="section-title">Comprehensive Protection</h2>
+                                    <div class="features-grid">
+                                        <div class="feature-box">
+                                            <i class="fas fa-bug"></i>
+                                            <h3>Advanced Threat Detection</h3>
+                                            <p>Identify security flaws before attackers do with our comprehensive scanning engine.</p>
+                                        </div>
+                                        <div class="feature-box">
+                                            <i class="fas fa-bolt"></i>
+                                            <h3>Real-time Monitoring</h3>
+                                            <p>Continuously monitor your assets for new threats and vulnerabilities as they emerge.</p>
+                                        </div>
+                                        <div class="feature-box">
+                                            <i class="fas fa-file-alt"></i>
+                                            <h3>Detailed Reports</h3>
+                                            <p>Get comprehensive reports with remediation steps for each identified vulnerability.</p>
+                                        </div>
+                                        <div class="feature-box">
+                                            <i class="fas fa-shield-alt"></i>
+                                            <h3>Compliance</h3>
+                                            <p>Ensure your systems meet industry standards and regulatory requirements.</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            `;
+                            break;
+                        case 'pricing':
+                            html = `
+                                <section class="hero">
+                                    <h1>Simple, Transparent Pricing</h1>
+                                    <p>Choose the plan that works best for your security needs.</p>
+                                </section>
+                                
+                                <section>
+                                    <div class="features-grid">
+                                        <div class="feature-box">
+                                            <h3>Basic</h3>
+                                            <div style="font-size: 2rem; margin: 20px 0; color: var(--secondary);">$49/mo</div>
+                                            <ul style="text-align: left; margin: 20px 0;">
+                                                <li>Monthly scans</li>
+                                                <li>Basic vulnerability detection</li>
+                                                <li>Email reports</li>
+                                                <li>100 scans/month</li>
+                                            </ul>
+                                            <button class="btn">Get Started</button>
+                                        </div>
+                                        <div class="feature-box" style="border: 2px solid var(--secondary);">
+                                            <h3>Professional</h3>
+                                            <div style="font-size: 2rem; margin: 20px 0; color: var(--secondary);">$149/mo</div>
+                                            <ul style="text-align: left; margin: 20px 0;">
+                                                <li>Weekly scans</li>
+                                                <li>Advanced vulnerability detection</li>
+                                                <li>Detailed analytics dashboard</li>
+                                                <li>1000 scans/month</li>
+                                                <li>Priority support</li>
+                                            </ul>
+                                            <button class="btn btn-secondary">Get Started</button>
+                                        </div>
+                                        <div class="feature-box">
+                                            <h3>Enterprise</h3>
+                                            <div style="font-size: 2rem; margin: 20px 0; color: var(--secondary);">Custom</div>
+                                            <ul style="text-align: left; margin: 20px 0;">
+                                                <li>Daily scans</li>
+                                                <li>Comprehensive vulnerability detection</li>
+                                                <li>Custom reporting</li>
+                                                <li>Unlimited scans</li>
+                                                <li>24/7 dedicated support</li>
+                                            </ul>
+                                            <button class="btn">Contact Sales</button>
+                                        </div>
+                                    </div>
+                                </section>
+                            `;
+                            break;
+                        case 'contact':
+                            html = `
+                                <section class="hero">
+                                    <h1>Contact Our Security Experts</h1>
+                                    <p>Get in touch with our team for personalized security solutions.</p>
+                                </section>
+                                
+                                <section>
+                                    <form class="scan-form" style="max-width: 600px; margin: 0 auto;">
+                                        <div class="form-group">
+                                            <label for="name">Name</label>
+                                            <input type="text" id="name" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="contact-email">Email</label>
+                                            <input type="email" id="contact-email" name="email" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="message">Message</label>
+                                            <textarea id="message" name="message" rows="5" required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn">Send Message</button>
+                                    </form>
+                                </section>
+                            `;
+                            break;
+                        default: // home
+                            html = `
+                                <section class="hero">
+                                    <h1>Advanced Security Scanning</h1>
+                                    <p>Protect your digital assets with our cutting-edge security scanner. Detect vulnerabilities before they become threats.</p>
+                                    <a href="#scan-form" class="btn btn-secondary">Start Free Scan</a>
+                                </section>
+                                
+                                <section>
+                                    <h2 class="section-title">Key Features</h2>
+                                    <div class="features-grid">
+                                        <div class="feature-box">
+                                            <i class="fas fa-bug"></i>
+                                            <h3>Vulnerability Detection</h3>
+                                            <p>Identify security flaws before attackers do with our comprehensive scanning engine.</p>
+                                        </div>
+                                        <div class="feature-box">
+                                            <i class="fas fa-bolt"></i>
+                                            <h3>Real-time Monitoring</h3>
+                                            <p>Continuously monitor your assets for new threats and vulnerabilities as they emerge.</p>
+                                        </div>
+                                        <div class="feature-box">
+                                            <i class="fas fa-file-alt"></i>
+                                            <h3>Detailed Reports</h3>
+                                            <p>Get comprehensive reports with remediation steps for each identified vulnerability.</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            `;
+                    }
+                    
+                    // Update content
+                    if (this.contentContainer) {
+                        this.contentContainer.innerHTML = html;
+                    }
+                    
+                    // Update browser history
+                    if (pushState) {
+                        history.pushState({ page }, '', `/${page}`);
+                    }
+                    
+                    // Re-initialize any components that need it
+                    this.initializeComponents();
+                    
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                } catch (error) {
+                    console.error('Error loading page:', error);
+                    if (this.contentContainer) {
+                        this.contentContainer.innerHTML = '<p>Failed to load content. Please try again.</p>';
+                    }
+                } finally {
+                    // Hide loading indicator
+                    if (this.loadingIndicator) {
+                        this.loadingIndicator.style.display = 'none';
+                    }
+                }
+            }
+            
+            initializeComponents() {
+                // Re-initialize any components that might have been added dynamically
+                initializeForms();
+                initializeCarousels();
+                initializeAnimations();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.contentLoader = new DynamicContentLoader();
         });
-      }
-    });
-  }
-}
 
-// Initialize web animations when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  new WebAnimator();
-});
+        // ==================== CAROUSEL IMPLEMENTATION ====================
+        class Carousel {
+            constructor(element) {
+                this.carousel = element;
+                this.slides = this.carousel.querySelectorAll('.carousel-slide');
+                this.indicators = this.carousel.querySelectorAll('.carousel-indicator');
+                this.prevBtn = this.carousel.querySelector('.carousel-prev');
+                this.nextBtn = this.carousel.querySelector('.carousel-next');
+                this.currentIndex = 0;
+                this.autoPlayInterval = null;
+                
+                this.init();
+            }
+            
+            init() {
+                // Set up initial state
+                this.updateCarousel();
+                
+                // Add event listeners
+                if (this.prevBtn) {
+                    this.prevBtn.addEventListener('click', () => this.prevSlide());
+                }
+                
+                if (this.nextBtn) {
+                    this.nextBtn.addEventListener('click', () => this.nextSlide());
+                }
+                
+                // Indicator clicks
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => this.goToSlide(index));
+                });
+                
+                // Auto-play
+                this.startAutoPlay();
+                
+                // Pause auto-play on hover
+                this.carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
+                this.carousel.addEventListener('mouseleave', () => this.startAutoPlay());
+            }
+            
+            updateCarousel() {
+                // Update slide positions
+                this.slides.forEach((slide, index) => {
+                    slide.classList.toggle('active', index === this.currentIndex);
+                });
+                
+                // Update indicators
+                this.indicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index === this.currentIndex);
+                });
+            }
+            
+            goToSlide(index) {
+                this.currentIndex = index;
+                this.updateCarousel();
+            }
+            
+            nextSlide() {
+                this.currentIndex = (this.currentIndex + 1) % this.slides.length;
+                this.updateCarousel();
+            }
+            
+            prevSlide() {
+                this.currentIndex = (this.currentIndex - 1 + this.slides.length) % this.slides.length;
+                this.updateCarousel();
+            }
+            
+            startAutoPlay() {
+                this.stopAutoPlay(); // Clear any existing interval
+                this.autoPlayInterval = setInterval(() => {
+                    this.nextSlide();
+                }, 5000); // Change slide every 5 seconds
+            }
+            
+            stopAutoPlay() {
+                if (this.autoPlayInterval) {
+                    clearInterval(this.autoPlayInterval);
+                    this.autoPlayInterval = null;
+                }
+            }
+        }
 
-// ==================== SERVICE WORKER REGISTRATION ====================
-// Check if service workers are supported
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
-      })
-      .catch((error) => {
-        console.log('Service Worker registration failed:', error);
-      });
-  });
-}
+        // Initialize all carousels on the page
+        function initializeCarousels() {
+            document.querySelectorAll('.carousel').forEach(carousel => {
+                new Carousel(carousel);
+            });
+        }
 
-// ==================== LOCAL/SESSION STORAGE EXAMPLES ====================
-// Example of using localStorage
-function saveUserPreferences(preferences) {
-  try {
-    localStorage.setItem('userPreferences', JSON.stringify(preferences));
-  } catch (e) {
-    console.error('Failed to save preferences to localStorage', e);
-  }
-}
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeCarousels);
 
-function getUserPreferences() {
-  try {
-    const preferences = localStorage.getItem('userPreferences');
-    return preferences ? JSON.parse(preferences) : null;
-  } catch (e) {
-    console.error('Failed to retrieve preferences from localStorage', e);
-    return null;
-  }
-}
+        // ==================== FORM VALIDATION ====================
+        function initializeForms() {
+            // Get all forms with validation
+            const forms = document.querySelectorAll('form[data-validate]');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!validateForm(this)) {
+                        e.preventDefault();
+                    } else {
+                        e.preventDefault();
+                        alert('Form submitted successfully! In a real application, this would send your data to our servers for processing.');
+                    }
+                });
+                
+                // Real-time validation on input
+                const inputs = form.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', () => validateField(input));
+                    input.addEventListener('input', () => clearFieldError(input));
+                });
+            });
+        }
 
-// Example of using sessionStorage
-function saveScanResults(results) {
-  try {
-    sessionStorage.setItem('scanResults', JSON.stringify(results));
-  } catch (e) {
-    console.error('Failed to save scan results to sessionStorage', e);
-  }
-}
+        function validateForm(form) {
+            let isValid = true;
+            const inputs = form.querySelectorAll('input, textarea, select');
+            
+            inputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        }
 
-function getScanResults() {
-  try {
-    const results = sessionStorage.getItem('scanResults');
-    return results ? JSON.parse(results) : null;
-  } catch (e) {
-    console.error('Failed to retrieve scan results from sessionStorage', e);
-    return null;
-  }
-}
+        function validateField(field) {
+            // Clear any existing error
+            clearFieldError(field);
+            
+            const value = field.value.trim();
+            const isRequired = field.hasAttribute('required');
+            const type = field.getAttribute('type') || field.tagName.toLowerCase();
+            
+            // Check if field is required and empty
+            if (isRequired && !value) {
+                showFieldError(field, 'This field is required');
+                return false;
+            }
+            
+            // Type-specific validation
+            switch (type) {
+                case 'email':
+                    if (value && !isValidEmail(value)) {
+                        showFieldError(field, 'Please enter a valid email address');
+                        return false;
+                    }
+                    break;
+                case 'url':
+                    if (value && !isValidURL(value)) {
+                        showFieldError(field, 'Please enter a valid URL');
+                        return false;
+                    }
+                    break;
+                case 'password':
+                    if (value && value.length < 8) {
+                        showFieldError(field, 'Password must be at least 8 characters');
+                        return false;
+                    }
+                    break;
+                case 'checkbox':
+                    if (isRequired && !field.checked) {
+                        showFieldError(field, 'This field is required');
+                        return false;
+                    }
+                    break;
+            }
+            
+            // Custom validation patterns
+            const pattern = field.getAttribute('pattern');
+            if (pattern && value) {
+                const regex = new RegExp(pattern);
+                if (!regex.test(value)) {
+                    const errorMessage = field.getAttribute('data-error-message') || 'Please enter a valid value';
+                    showFieldError(field, errorMessage);
+                    return false;
+                }
+            }
+            
+            return true;
+        }
 
-// ==================== COMPLETE DOM READY INITIALIZATION ====================
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('CyberScan Pro client-side functionality initialized');
-  
-  // Initialize all components
-  initializeForms();
-  initializeCarousels();
-  
-  // Initialize other components as needed
-  // Web animations, lazy loading, etc. are initialized in their own modules
-});
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function isValidURL(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function showFieldError(field, message) {
+            // Add error class
+            field.classList.add('error');
+            
+            // Create or update error message
+            let errorElement = field.parentNode.querySelector('.field-error');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'field-error';
+                field.parentNode.appendChild(errorElement);
+            }
+            
+            errorElement.textContent = message;
+        }
+
+        function clearFieldError(field) {
+            field.classList.remove('error');
+            const errorElement = field.parentNode.querySelector('.field-error');
+            if (errorElement) {
+                errorElement.remove();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeForms);
+
+        // ==================== DRAG AND DROP ====================
+        class DragAndDrop {
+            constructor(container) {
+                this.container = container;
+                this.draggedItem = null;
+                this.init();
+            }
+            
+            init() {
+                if (!this.container) return;
+                
+                this.container.addEventListener('dragstart', (e) => this.handleDragStart(e));
+                this.container.addEventListener('dragover', (e) => this.handleDragOver(e));
+                this.container.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+                this.container.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+                this.container.addEventListener('drop', (e) => this.handleDrop(e));
+                this.container.addEventListener('dragend', (e) => this.handleDragEnd(e));
+            }
+            
+            handleDragStart(e) {
+                this.draggedItem = e.target;
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', e.target.innerHTML);
+            }
+            
+            handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                return false;
+            }
+            
+            handleDragEnter(e) {
+                e.preventDefault();
+                if (e.target.classList.contains('drop-zone')) {
+                    e.target.classList.add('drag-over');
+                }
+            }
+            
+            handleDragLeave(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.target.classList.remove('drag-over');
+                }
+            }
+            
+            handleDrop(e) {
+                e.stopPropagation();
+                
+                if (e.target.classList.contains('drop-zone')) {
+                    e.target.classList.remove('drag-over');
+                    
+                    // Add the dragged item to the drop zone
+                    const newItem = document.createElement('div');
+                    newItem.className = 'draggable-item';
+                    newItem.innerHTML = this.draggedItem.innerHTML;
+                    newItem.draggable = true;
+                    e.target.appendChild(newItem);
+                    
+                    // Remove the original item
+                    this.draggedItem.remove();
+                }
+                
+                return false;
+            }
+            
+            handleDragEnd(e) {
+                if (e.target) {
+                    e.target.classList.remove('dragging');
+                }
+                document.querySelectorAll('.drag-over').forEach(zone => {
+                    zone.classList.remove('drag-over');
+                });
+            }
+        }
+
+        // Initialize drag and drop when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.drag-container').forEach(container => {
+                new DragAndDrop(container);
+            });
+        });
+
+        // ==================== INFINITE SCROLL ====================
+        class InfiniteScroll {
+            constructor(container, options = {}) {
+                this.container = container;
+                this.options = {
+                    threshold: 0.1,
+                    apiUrl: '/api/load-more',
+                    ...options
+                };
+                this.isLoading = false;
+                this.hasMore = true;
+                this.page = 1;
+                
+                this.init();
+            }
+            
+            init() {
+                // Create observer
+                this.observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting && !this.isLoading && this.hasMore) {
+                                this.loadMore();
+                            }
+                        });
+                    },
+                    { threshold: this.options.threshold }
+                );
+                
+                // Observe sentinel element
+                const sentinel = document.createElement('div');
+                sentinel.id = 'infinite-scroll-sentinel';
+                if (this.container) {
+                    this.container.appendChild(sentinel);
+                    this.observer.observe(sentinel);
+                }
+            }
+            
+            async loadMore() {
+                if (this.isLoading) return;
+                
+                this.isLoading = true;
+                
+                try {
+                    // Show loading indicator
+                    const loadingElement = document.createElement('div');
+                    loadingElement.id = 'infinite-scroll-loading';
+                    loadingElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading more vulnerabilities...';
+                    if (this.container) {
+                        this.container.appendChild(loadingElement);
+                    }
+                    
+                    // Simulate fetching more content
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Remove loading indicator
+                    loadingElement.remove();
+                    
+                    // Sample data for demo
+                    const newItems = [
+                        {
+                            title: "Open Redirect Vulnerability",
+                            severity: "medium",
+                            description: "A parameter on the redirect page allows redirection to external domains, which could be exploited for phishing.",
+                            details: ["Parameter: redirect_url", "Location: /redirect"]
+                        },
+                        {
+                            title: "Insecure Direct Object Reference",
+                            severity: "high",
+                            description: "System allows direct access to objects based on user-supplied input without proper authorization checks.",
+                            details: ["Endpoint: /api/documents", "Parameter: id"]
+                        },
+                        {
+                            title: "CSRF Protection Missing",
+                            severity: "medium",
+                            description: "Forms lack anti-CSRF tokens, making them vulnerable to cross-site request forgery attacks.",
+                            details: ["Form: Contact Form", "Method: POST"]
+                        }
+                    ];
+                    
+                    if (newItems.length > 0 && this.page < 3) { // Limit to 3 pages for demo
+                        // Add new items to container
+                        newItems.forEach(item => {
+                            const itemElement = this.createItemElement(item);
+                            if (this.container) {
+                                this.container.insertBefore(itemElement, document.getElementById('infinite-scroll-sentinel'));
+                            }
+                        });
+                        
+                        this.page++;
+                    } else {
+                        // No more items
+                        this.hasMore = false;
+                        this.showEndMessage();
+                    }
+                } catch (error) {
+                    console.error('Error loading more items:', error);
+                    this.showError();
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+            
+            createItemElement(item) {
+                // Create DOM element for item
+                const element = document.createElement('div');
+                element.className = 'vulnerability-card';
+                
+                let severityClass = '';
+                if (item.severity === 'high') severityClass = 'high';
+                else if (item.severity === 'medium') severityClass = 'medium';
+                else severityClass = 'low';
+                
+                element.innerHTML = `
+                    <div class="vulnerability-header">
+                        <div class="vulnerability-title">${item.title}</div>
+                        <div class="severity ${severityClass}">${item.severity.charAt(0).toUpperCase() + item.severity.slice(1)}</div>
+                    </div>
+                    <div class="vulnerability-description">
+                        ${item.description}
+                    </div>
+                    <div class="vulnerability-details">
+                        <div><i class="fas fa-map-marker-alt"></i> ${item.details[0]}</div>
+                        <div><i class="fas fa-code"></i> ${item.details[1]}</div>
+                    </div>
+                `;
+                return element;
+            }
+            
+            showEndMessage() {
+                const endElement = document.createElement('div');
+                endElement.id = 'infinite-scroll-end';
+                endElement.innerHTML = '<i class="fas fa-check-circle"></i> You have reached the end of vulnerabilities';
+                if (this.container) {
+                    this.container.appendChild(endElement);
+                }
+            }
+            
+            showError() {
+                const errorElement = document.createElement('div');
+                errorElement.id = 'infinite-scroll-error';
+                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load more vulnerabilities. Please try again.';
+                if (this.container) {
+                    this.container.appendChild(errorElement);
+                }
+            }
+        }
+
+        // Initialize infinite scroll
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('results-container');
+            if (container) {
+                new InfiniteScroll(container);
+            }
+        });
+
+        // ==================== WEB ANIMATIONS API ====================
+        class WebAnimator {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                // Animate elements when they come into view
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.animateOnScroll();
+                });
+                
+                // Add hover animations to buttons
+                this.addHoverAnimations();
+            }
+            
+            animateOnScroll() {
+                // Create observer for scroll animations
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this.animateElement(entry.target);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                
+                // Observe elements with animation classes
+                document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+            
+            animateElement(element) {
+                // Different animations based on data attribute
+                const animationType = element.getAttribute('data-animation') || 'fadeIn';
+                
+                let keyframes, options;
+                
+                switch (animationType) {
+                    case 'fadeIn':
+                        keyframes = [
+                            { opacity: 0, transform: 'translateY(30px)' },
+                            { opacity: 1, transform: 'translateY(0)' }
+                        ];
+                        options = {
+                            duration: 800,
+                            easing: 'ease-out'
+                        };
+                        break;
+                        
+                    case 'slideInLeft':
+                        keyframes = [
+                            { transform: 'translateX(-100%)', opacity: 0 },
+                            { transform: 'translateX(0)', opacity: 1 }
+                        ];
+                        options = {
+                            duration: 800,
+                            easing: 'ease-out'
+                        };
+                        break;
+                        
+                    case 'slideInRight':
+                        keyframes = [
+                            { transform: 'translateX(100%)', opacity: 0 },
+                            { transform: 'translateX(0)', opacity: 1 }
+                        ];
+                        options = {
+                            duration: 800,
+                            easing: 'ease-out'
+                        };
+                        break;
+                        
+                    case 'slideUp':
+                        keyframes = [
+                            { transform: 'translateY(50px)', opacity: 0 },
+                            { transform: 'translateY(0)', opacity: 1 }
+                        ];
+                        options = {
+                            duration: 600,
+                            easing: 'ease-out'
+                        };
+                        break;
+                        
+                    default:
+                        return;
+                }
+                
+                // Check if Web Animations API is supported
+                if (element.animate) {
+                    element.animate(keyframes, options);
+                }
+                
+                // Add a class to keep the final state
+                element.classList.add('animated');
+            }
+            
+            addHoverAnimations() {
+                // Add hover animations to buttons
+                document.querySelectorAll('button, .btn').forEach(button => {
+                    // Check if Web Animations API is supported
+                    if (button.animate) {
+                        button.addEventListener('mouseenter', (e) => {
+                            e.target.animate([
+                                { transform: 'scale(1)' },
+                                { transform: 'scale(1.05)' }
+                            ], {
+                                duration: 200,
+                                fill: 'forwards'
+                            });
+                        });
+                        
+                        button.addEventListener('mouseleave', (e) => {
+                            e.target.animate([
+                                { transform: 'scale(1.05)' },
+                                { transform: 'scale(1)' }
+                            ], {
+                                duration: 200,
+                                fill: 'forwards'
+                            });
+                        });
+                    }
+                });
+            }
+        }
+
+        // Initialize web animations when DOM is loaded
+        function initializeAnimations() {
+            new WebAnimator();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new WebAnimator();
+        });
+
+        // ==================== LOCAL/SESSION STORAGE EXAMPLES ====================
+        // Example of using localStorage
+        function saveUserPreferences(preferences) {
+            try {
+                localStorage.setItem('userPreferences', JSON.stringify(preferences));
+            } catch (e) {
+                console.error('Failed to save preferences to localStorage', e);
+            }
+        }
+
+        function getUserPreferences() {
+            try {
+                const preferences = localStorage.getItem('userPreferences');
+                return preferences ? JSON.parse(preferences) : null;
+            } catch (e) {
+                console.error('Failed to retrieve preferences from localStorage', e);
+                return null;
+            }
+        }
+
+        // Example of using sessionStorage
+        function saveScanResults(results) {
+            try {
+                sessionStorage.setItem('scanResults', JSON.stringify(results));
+            } catch (e) {
+                console.error('Failed to save scan results to sessionStorage', e);
+            }
+        }
+
+        function getScanResults() {
+            try {
+                const results = sessionStorage.getItem('scanResults');
+                return results ? JSON.parse(results) : null;
+            } catch (e) {
+                console.error('Failed to retrieve scan results from sessionStorage', e);
+                return null;
+            }
+        }
+
+        // ==================== COMPLETE DOM READY INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CyberScan Pro client-side functionality initialized');
+            
+            // Initialize all components
+            initializeForms();
+            initializeCarousels();
+            initializeAnimations();
+            
+            // Save a sample preference to localStorage
+            saveUserPreferences({
+                theme: 'dark',
+                notifications: true,
+                language: 'en'
+            });
+            
+            // Save sample scan results to sessionStorage
+            saveScanResults({
+                timestamp: new Date().toISOString(),
+                url: 'https://example.com',
+                vulnerabilities: 12,
+                status: 'completed'
+            });
+        });
+    </script>
+</body>
+</html>
