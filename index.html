@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Secure Client-Only App</title><!-- 🔒 Content Security Policy (Client-side strongest possible) --><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://ipapi.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'"><style>
+<title>Secure Client-Only App</title><!-- 🔒 Content Security Policy (Client-side strongest possible) --><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://ipapi.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'"><style>
 /* ⚠️ עיצוב לא שונה – רק בסיס טכני */
 body{font-family:sans-serif;margin:0}
 .hidden{display:none}
@@ -143,13 +143,13 @@ document.getElementById('safeInput').addEventListener('input',e=>{
 });
 
 /********************
- * 📦 Service Worker (inline register)
+ * 📦 Service Worker (safe register)
  ********************/
-if('serviceWorker'in navigator){
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([
-    `self.addEventListener('install',e=>{e.waitUntil(caches.open('v1').then(c=>c.addAll(['./'])))});
-     self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`
-  ],{type:'text/javascript'})));
+if('serviceWorker' in navigator){
+  const swCode = "self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open('v1').then(c=>c.addAll(['./'])))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})";
+  const blob = new Blob([swCode],{type:'text/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
 }
 </script></body>
 </html>
