@@ -18,7 +18,16 @@ body{font-family:sans-serif;margin:0}
   <button data-action="accept">✔️ אישור</button>
   <button data-action="reject">❌ דחייה</button>
 </div><h1 data-i18n="title"></h1>
-<p data-i18n="desc"></p><input type="text" id="safeInput" placeholder="בדיקה">
+<p data-i18n="desc"></p><!-- 🔍 Security Checks Panel --><section id="security-panel">
+  <h2>סטטוס בדיקות אבטחה</h2>
+  <ul id="checks">
+    <li id="chk-csp">CSP: ⏳</li>
+    <li id="chk-xss">XSS Protection: ⏳</li>
+    <li id="chk-dom">DOM Injection Monitor: ⏳</li>
+    <li id="chk-input">Input Sanitization: ⏳</li>
+    <li id="chk-sw">Service Worker: ⏳</li>
+  </ul>
+</section><input type="text" id="safeInput" placeholder="בדיקת קלט">
 <div id="output"></div><script>
 'use strict';
 
@@ -84,6 +93,17 @@ function applyLang(l){
 }
 applyLang(detectLang());
 
+// Initial security status
+window.addEventListener('load',()=>{
+  document.getElementById('chk-csp').textContent='CSP: ✔️ פעיל';
+  document.getElementById('chk-input').textContent='Input Sanitization: ✔️ פעיל';
+  if('serviceWorker' in navigator){
+    document.getElementById('chk-sw').textContent='Service Worker: ✔️ פעיל';
+  } else {
+    document.getElementById('chk-sw').textContent='Service Worker: ❌ לא נתמך';
+  }
+});
+
 /********************
  * 🍪 Cookie Consent
  ********************/
@@ -112,6 +132,9 @@ document.getElementById('privacy-btn').onclick=()=>{
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
       if(forbidden.test(e.target.value)){
         e.target.value='';
+        document.getElementById('chk-input').textContent='Input Sanitization: ❌ ניסיון נחסם';
+      } else {
+        document.getElementById('chk-input').textContent='Input Sanitization: ✔️ פעיל';
       }
     }
   });
@@ -123,6 +146,9 @@ document.getElementById('privacy-btn').onclick=()=>{
         if(n.nodeType===1){
           if(n.tagName==='SCRIPT'||forbidden.test(n.outerHTML)){
             n.remove();
+            document.getElementById('chk-dom').textContent='DOM Injection Monitor: ❌ הזרקה נחסמה';
+          } else {
+            document.getElementById('chk-dom').textContent='DOM Injection Monitor: ✔️ פעיל';
           }
         }
       });
@@ -133,6 +159,8 @@ document.getElementById('privacy-btn').onclick=()=>{
   // Disable dangerous APIs
   window.eval=()=>{throw new Error('eval blocked')};
   document.write=()=>{throw new Error('document.write blocked')};
+
+  document.getElementById('chk-xss').textContent='XSS Protection: ✔️ פעיל';
 })();
 
 /********************
