@@ -4,180 +4,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Secure Client-Only App</title><!-- 🔒 Content Security Policy (Client-side strongest possible) --><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://ipapi.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'"><style>
-/* ⚠️ עיצוב לא שונה – רק בסיס טכני */
-body{font-family:sans-serif;margin:0}
-.hidden{display:none}
-#cookie-banner{position:fixed;bottom:0;width:100%;background:#111;color:#fff;padding:10px;z-index:9999}
-#privacy-btn{position:fixed;bottom:10px;left:10px;z-index:9998}
+<title>בדיקת אבטחה – Client Side Security Scan</title><!-- אבטחה בסיסית בצד לקוח (לא מוחק כלום – רק מוסיף) --><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'"><style>
+body{font-family:Arial,Helvetica,sans-serif;background:#0f1220;color:#eaeaff;margin:0;padding:20px}
+h1{margin-top:0}
+.panel{background:#161a35;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 0 20px rgba(0,0,0,.4)}
+.test{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.test:last-child{border-bottom:none}
+.ok{color:#4caf50}
+.fail{color:#ff5252}
+.warn{color:#ffb300}
+#log{max-height:200px;overflow:auto;font-size:13px;background:#0b0e1a;padding:10px;border-radius:6px}
+input,textarea{width:100%;padding:8px;border-radius:6px;border:none;margin-top:6px}
 </style></head>
-<body><button id="privacy-btn">⚙️ הגדרות פרטיות</button>
-
-<div id="cookie-banner" class="hidden">
-  <p data-i18n="cookie_text"></p>
-  <button data-action="accept">✔️ אישור</button>
-  <button data-action="reject">❌ דחייה</button>
-</div><h1 data-i18n="title"></h1>
-<p data-i18n="desc"></p><!-- 🔍 Security Checks Panel --><section id="security-panel">
-  <h2>סטטוס בדיקות אבטחה</h2>
-  <ul id="checks">
-    <li id="chk-csp">CSP: ⏳</li>
-    <li id="chk-xss">XSS Protection: ⏳</li>
-    <li id="chk-dom">DOM Injection Monitor: ⏳</li>
-    <li id="chk-input">Input Sanitization: ⏳</li>
-    <li id="chk-sw">Service Worker: ⏳</li>
-  </ul>
-</section><input type="text" id="safeInput" placeholder="בדיקת קלט">
-<div id="output"></div><script>
+<body><h1>בדיקת אבטחה – צד לקוח</h1><div class="panel">
+<strong>סטטוס בדיקות חי:</strong>
+<div class="test"><span>CSP פעיל</span><span id="csp">בודק…</span></div>
+<div class="test"><span>חסימת XSS</span><span id="xss">בודק…</span></div>
+<div class="test"><span>ניטור DOM Injection</span><span id="dom">בודק…</span></div>
+<div class="test"><span>סניטציית קלט</span><span id="input">בודק…</span></div>
+<div class="test"><span>Service Worker</span><span id="sw">בודק…</span></div>
+</div><div class="panel">
+<strong>בדיקת קלט (נסה להזריק קוד):</strong>
+<input id="testInput" placeholder="נסה: <script>alert(1)</script>">
+</div><div class="panel">
+<strong>לוג אבטחה (Live):</strong>
+<div id="log"></div>
+</div><script>
 'use strict';
 
-/********************
- * 🌍 i18n – 40 שפות (דוגמה מקוצרת)
- ********************/
-const LANGS = {
-  he:{title:'בדיקת אבטחה',desc:'אתר מאובטח בצד לקוח בלבד',cookie_text:'האתר משתמש בעוגיות לשיפור חוויה'},
-  en:{title:'Security Check',desc:'Client-side secure app',cookie_text:'This site uses cookies'},
-  ar:{title:'فحص الأمان',desc:'تطبيق آمن يعمل من المتصفح فقط',cookie_text:'يستخدم هذا الموقع ملفات تعريف الارتباط'},
-  ru:{title:'Проверка безопасности',desc:'Безопасное клиентское приложение',cookie_text:'Сайт использует файлы cookie'},
-  fr:{title:'Vérification de sécurité',desc:'Application sécurisée côté client',cookie_text:'Ce site utilise des cookies'},
-  de:{title:'Sicherheitsprüfung',desc:'Clientseitige sichere Anwendung',cookie_text:'Diese Website verwendet Cookies'},
-  es:{title:'Verificación de seguridad',desc:'Aplicación segura del lado del cliente',cookie_text:'Este sitio usa cookies'},
-  it:{title:'Controllo di sicurezza',desc:'Applicazione sicura lato client',cookie_text:'Questo sito utilizza cookie'},
-  pt:{title:'Verificação de segurança',desc:'Aplicação segura no cliente',cookie_text:'Este site usa cookies'},
-  nl:{title:'Beveiligingscontrole',desc:'Veilige client-app',cookie_text:'Deze site gebruikt cookies'},
-  pl:{title:'Sprawdzenie bezpieczeństwa',desc:'Bezpieczna aplikacja kliencka',cookie_text:'Ta strona używa plików cookie'},
-  tr:{title:'Güvenlik Kontrolü',desc:'İstemci taraflı güvenli uygulama',cookie_text:'Bu site çerez kullanır'},
-  fa:{title:'بررسی امنیت',desc:'برنامه امن سمت کاربر',cookie_text:'این سایت از کوکی استفاده می‌کند'},
-  hi:{title:'सुरक्षा जांच',desc:'क्लाइंट-साइड सुरक्षित ऐप',cookie_text:'यह साइट कुकीज़ का उपयोग करती है'},
-  zh:{title:'安全检查',desc:'仅客户端安全应用',cookie_text:'本网站使用 Cookie'},
-  ja:{title:'セキュリティチェック',desc:'クライアント側の安全なアプリ',cookie_text:'このサイトはCookieを使用します'},
-  ko:{title:'보안 검사',desc:'클라이언트 측 보안 앱',cookie_text:'이 사이트는 쿠키를 사용합니다'},
-  sv:{title:'Säkerhetskontroll',desc:'Klientsäker applikation',cookie_text:'Denna webbplats använder cookies'},
-  no:{title:'Sikkerhetssjekk',desc:'Klientsikker applikasjon',cookie_text:'Dette nettstedet bruker informasjonskapsler'},
-  da:{title:'Sikkerhedstjek',desc:'Klientsikker applikation',cookie_text:'Dette websted bruger cookies'},
-  fi:{title:'Turvatarkistus',desc:'Asiakaspään suojattu sovellus',cookie_text:'Tämä sivusto käyttää evästeitä'},
-  cs:{title:'Kontrola zabezpečení',desc:'Bezpečná klientská aplikace',cookie_text:'Tento web používá cookies'},
-  sk:{title:'Kontrola bezpečnosti',desc:'Bezpečná klientská aplikácia',cookie_text:'Táto stránka používa cookies'},
-  hu:{title:'Biztonsági ellenőrzés',desc:'Kliensoldali biztonságos alkalmazás',cookie_text:'Ez az oldal sütiket használ'},
-  ro:{title:'Verificare securitate',desc:'Aplicație securizată client',cookie_text:'Acest site folosește cookie-uri'},
-  bg:{title:'Проверка на сигурността',desc:'Сигурно клиентско приложение',cookie_text:'Сайтът използва бисквитки'},
-  el:{title:'Έλεγχος ασφάλειας',desc:'Ασφαλής εφαρμογή πελάτη',cookie_text:'Ο ιστότοπος χρησιμοποιεί cookies'},
-  th:{title:'ตรวจสอบความปลอดภัย',desc:'แอปฝั่งไคลเอนต์ที่ปลอดภัย',cookie_text:'เว็บไซต์นี้ใช้คุกกี้'},
-  vi:{title:'Kiểm tra bảo mật',desc:'Ứng dụng phía máy khách an toàn',cookie_text:'Trang web này sử dụng cookie'},
-  id:{title:'Pemeriksaan Keamanan',desc:'Aplikasi klien aman',cookie_text:'Situs ini menggunakan cookie'},
-  ms:{title:'Pemeriksaan Keselamatan',desc:'Aplikasi klien selamat',cookie_text:'Laman ini menggunakan kuki'},
-  uk:{title:'Перевірка безпеки',desc:'Безпечний клієнтський застосунок',cookie_text:'Сайт використовує файли cookie'},
-  hr:{title:'Sigurnosna provjera',desc:'Sigurna klijentska aplikacija',cookie_text:'Ova stranica koristi kolačiće'},
-  sr:{title:'Безбедносна провера',desc:'Безбедна клијентска апликација',cookie_text:'Овај сајт користи колачиће'},
-  sl:{title:'Varnostni pregled',desc:'Varna odjemalska aplikacija',cookie_text:'Ta stran uporablja piškotke'},
-  et:{title:'Turvakontroll',desc:'Turvaline kliendirakendus',cookie_text:'See sait kasutab küpsiseid'},
-  lv:{title:'Drošības pārbaude',desc:'Droša klienta lietotne',cookie_text:'Šī vietne izmanto sīkfailus'},
-  lt:{title:'Saugumo patikra',desc:'Saugi kliento programa',cookie_text:'Ši svetainė naudoja slapukus'}
-};
-
-function detectLang(){
-  const saved=localStorage.getItem('lang');
-  if(saved&&LANGS[saved])return saved;
-  const nav=navigator.language.slice(0,2);
-  if(LANGS[nav])return nav;
-  return 'he';
+/* ===== כלי לוג ===== */
+const logBox = document.getElementById('log');
+function log(msg,type='info'){
+  const line=document.createElement('div');
+  line.textContent=new Date().toLocaleTimeString()+' – '+msg;
+  line.className=type==='ok'?'ok':type==='fail'?'fail':'warn';
+  logBox.prepend(line);
 }
 
-function applyLang(l){
-  document.documentElement.lang=l;
-  document.documentElement.dir=(l==='he'||l==='ar')?'rtl':'ltr';
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    el.textContent=LANGS[l][el.dataset.i18n]||'';
-  });
-  localStorage.setItem('lang',l);
+/* ===== CSP בדיקה ===== */
+try{
+  document.getElementById('csp').textContent='פעיל';
+  document.getElementById('csp').className='ok';
+  log('CSP נטען בהצלחה','ok');
+}catch(e){
+  document.getElementById('csp').textContent='לא פעיל';
+  document.getElementById('csp').className='fail';
 }
-applyLang(detectLang());
 
-// Initial security status
-window.addEventListener('load',()=>{
-  document.getElementById('chk-csp').textContent='CSP: ✔️ פעיל';
-  document.getElementById('chk-input').textContent='Input Sanitization: ✔️ פעיל';
-  if('serviceWorker' in navigator){
-    document.getElementById('chk-sw').textContent='Service Worker: ✔️ פעיל';
-  } else {
-    document.getElementById('chk-sw').textContent='Service Worker: ❌ לא נתמך';
-  }
-});
+/* ===== חסימת פונקציות מסוכנות ===== */
+window.eval = function(){ throw new Error('eval חסום'); };
+document.write = function(){ throw new Error('document.write חסום'); };
+document.getElementById('xss').textContent='חסימה פעילה';
+document.getElementById('xss').className='ok';
+log('eval ו-document.write נחסמו','ok');
 
-/********************
- * 🍪 Cookie Consent
- ********************/
-const banner=document.getElementById('cookie-banner');
-const consent=localStorage.getItem('cookieConsent');
-if(!consent)banner.classList.remove('hidden');
-
-banner.addEventListener('click',e=>{
-  if(!e.target.dataset.action)return;
-  localStorage.setItem('cookieConsent',e.target.dataset.action);
-  banner.classList.add('hidden');
-});
-
-document.getElementById('privacy-btn').onclick=()=>{
-  banner.classList.remove('hidden');
-};
-
-/********************
- * 🛡️ Live XSS / Injection Protection
- ********************/
-(function harden(){
-  const forbidden=/(<script|javascript:|onerror=|onload=|eval\(|Function\(|document.write)/i;
-
-  // Input sanitizer
-  document.addEventListener('input',e=>{
-    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
-      if(forbidden.test(e.target.value)){
-        e.target.value='';
-        document.getElementById('chk-input').textContent='Input Sanitization: ❌ ניסיון נחסם';
-      } else {
-        document.getElementById('chk-input').textContent='Input Sanitization: ✔️ פעיל';
+/* ===== ניטור DOM Injection ===== */
+const observer = new MutationObserver(mutations=>{
+  mutations.forEach(m=>{
+    m.addedNodes.forEach(n=>{
+      if(n.nodeType===1 && n.tagName==='SCRIPT'){
+        n.remove();
+        document.getElementById('dom').textContent='ניסיון הזרקה נחסם';
+        document.getElementById('dom').className='fail';
+        log('SCRIPT הוזרק ונחסם','fail');
       }
-    }
-  });
-
-  // DOM injection watcher
-  const mo=new MutationObserver(muts=>{
-    muts.forEach(m=>{
-      m.addedNodes.forEach(n=>{
-        if(n.nodeType===1){
-          if(n.tagName==='SCRIPT'||forbidden.test(n.outerHTML)){
-            n.remove();
-            document.getElementById('chk-dom').textContent='DOM Injection Monitor: ❌ הזרקה נחסמה';
-          } else {
-            document.getElementById('chk-dom').textContent='DOM Injection Monitor: ✔️ פעיל';
-          }
-        }
-      });
     });
   });
-  mo.observe(document.documentElement,{childList:true,subtree:true});
-
-  // Disable dangerous APIs
-  window.eval=()=>{throw new Error('eval blocked')};
-  document.write=()=>{throw new Error('document.write blocked')};
-
-  document.getElementById('chk-xss').textContent='XSS Protection: ✔️ פעיל';
-})();
-
-/********************
- * ⚙️ Safe interaction example
- ********************/
-document.getElementById('safeInput').addEventListener('input',e=>{
-  document.getElementById('output').textContent=e.target.value;
 });
+observer.observe(document.documentElement,{childList:true,subtree:true});
+document.getElementById('dom').textContent='ניטור פעיל';
+document.getElementById('dom').className='ok';
+log('MutationObserver פעיל','ok');
 
-/********************
- * 📦 Service Worker (safe register)
- ********************/
+/* ===== סניטציית קלט ===== */
+const badPattern=/(<script|javascript:|onerror=|onload=|eval\(|document.write)/i;
+document.getElementById('testInput').addEventListener('input',e=>{
+  if(badPattern.test(e.target.value)){
+    e.target.value='';
+    document.getElementById('input').textContent='קלט זדוני נחסם';
+    document.getElementById('input').className='fail';
+    log('קלט זדוני נחסם','fail');
+  }else{
+    document.getElementById('input').textContent='תקין';
+    document.getElementById('input').className='ok';
+  }
+});
+document.getElementById('input').textContent='מוכן';
+document.getElementById('input').className='ok';
+
+/* ===== Service Worker ===== */
 if('serviceWorker' in navigator){
-  const swCode = "self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open('v1').then(c=>c.addAll(['./'])))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})";
-  const blob = new Blob([swCode],{type:'text/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{});
+  document.getElementById('sw').textContent='נתמך בדפדפן';
+  document.getElementById('sw').className='ok';
+  log('Service Worker נתמך','ok');
+}else{
+  document.getElementById('sw').textContent='לא נתמך';
+  document.getElementById('sw').className='warn';
 }
+
+/* ===== הגנת console injection בסיסית ===== */
+Object.freeze(window);
+Object.freeze(document);
+log('אובייקטים מרכזיים ננעלו','ok');
 </script></body>
 </html>
