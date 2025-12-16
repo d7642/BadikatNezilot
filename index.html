@@ -106,9 +106,14 @@
                     <div style="font-size:11px; color:var(--text-muted);" data-i18n="scoreLabel">Score</div>
                 </div>
 
-                <button id="downloadBtn" class="btn secondary" style="display:none;">
-                    <span data-i18n="downloadBtn">📥 Download Report</span>
-                </button>
+                <div id="exportGroup" style="display:none; gap:5px;">
+                    <button id="downloadHebBtn" class="btn secondary">
+                        📄 דוח קריא (HTML)
+                    </button>
+                    <button id="downloadJsonBtn" class="btn secondary">
+                        { } JSON
+                    </button>
+                </div>
 
                 <button id="fullBtn" class="btn">
                     <span data-i18n="fullScanBtn">🔍 Start Scan</span>
@@ -236,7 +241,6 @@
                 appTitle: 'CyberScan Pro',
                 appSubtitle: 'בדיקות אבטחה צד-לקוח מקיפות',
                 fullScanBtn: '🔍 התחל סריקה מלאה',
-                downloadBtn: '📥 הורד דוח JSON', // NEW
                 scoreLabel: 'ציון אבטחה',
                 logTitle: 'לוגים חיים (צד לקוח)',
                 cookieTitle: '🍪 פרטיות ועוגיות',
@@ -261,7 +265,6 @@
                 appTitle: 'CyberScan Pro',
                 appSubtitle: 'Comprehensive Client-Side Security Checks',
                 fullScanBtn: '🔍 Start Full Scan',
-                downloadBtn: '📥 Download Report', // NEW
                 scoreLabel: 'Security Score',
                 logTitle: 'Live System Logs (Client-Side)',
                 cookieTitle: '🍪 Privacy & Cookies',
@@ -340,7 +343,6 @@
             js_errors: { group: 'netrt', points: 2, check: () => ({ value: window.onerror ? 'Monitored' : 'Missing', result: window.onerror ? 'good' : 'warn' }), details: { he: { title: 'JS Errors', impact: 'זיהוי תקלות.', mitigation: 'Global Handler.' }, en: { title: 'JS Errors', impact: 'Detect bugs.', mitigation: 'Global Handler.' } } },
         };
 
-        // --- NEW: Global variable to store results for download ---
         let lastScanData = null;
 
         function setLanguage(code) {
@@ -389,21 +391,76 @@
             return riskKey === 'bad' ? checkData.points : (riskKey === 'warn' ? checkData.points / 2 : 0);
         }
 
-        // --- NEW: Download Function ---
-        function downloadReport() {
-            if (!lastScanData) {
-                alert("Please run a scan first.");
-                return;
-            }
-            
+        // --- NEW: Download Logic ---
+
+        // 1. Download as JSON (Technical)
+        function downloadJSON() {
+            if (!lastScanData) return alert("Please run a scan first.");
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lastScanData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            const fileName = `security-report-${new Date().toISOString().slice(0,10)}.json`;
-            downloadAnchorNode.setAttribute("download", fileName);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            triggerDownload(dataStr, `security-report-${new Date().toISOString().slice(0,10)}.json`);
+        }
+
+        // 2. Download as HTML (Readable Hebrew)
+        function downloadHTML() {
+            if (!lastScanData) return alert("Please run a scan first.");
+            
+            const hebrewDate = new Date().toLocaleString('he-IL');
+            let htmlContent = `
+            <!DOCTYPE html>
+            <html lang="he" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>דוח אבטחה - CyberScan Pro</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f9f9f9; color: #333; padding: 20px; direction: rtl; }
+                    h1 { color: #d33b3b; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+                    .meta { background: #eee; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+                    .item { background: #fff; padding: 15px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 5px; border-right: 5px solid #ccc; }
+                    .item.bad { border-right-color: #ff5c5c; }
+                    .item.warn { border-right-color: #ffb86b; }
+                    .item.good { border-right-color: #39b54a; }
+                    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; color: white; font-size: 0.8em; font-weight: bold; }
+                    .bad .tag { background: #ff5c5c; } .warn .tag { background: #ffb86b; } .good .tag { background: #39b54a; }
+                    strong { color: #000; }
+                </style>
+            </head>
+            <body>
+                <h1>דוח אבטחה - CyberScan Pro</h1>
+                <div class="meta">
+                    <strong>תאריך:</strong> ${hebrewDate} <br>
+                    <strong>ציון סופי:</strong> ${lastScanData.score}/100
+                </div>
+                <h2>פירוט ממצאים</h2>
+            `;
+
+            lastScanData.results.forEach(item => {
+                // Ensure we use Hebrew text if available in the lastScanData (it should be if scanned in Hebrew)
+                // If scanned in English, we might want to force Hebrew here, but currently it saves what was displayed.
+                // To fix this, we look up the key again in Hebrew dict for the report.
+                const dict = CHECKS[item.id].details['he']; 
+                
+                htmlContent += `
+                <div class="item ${item.status}">
+                    <h3>${dict.title} <span class="tag">${item.status}</span></h3>
+                    <p><strong>תוצאה:</strong> ${item.value}</p>
+                    <p><strong>סיכון:</strong> ${dict.impact}</p>
+                    <p><strong>תיקון:</strong> ${dict.mitigation}</p>
+                </div>`;
+            });
+
+            htmlContent += `</body></html>`;
+
+            const dataStr = "data:text/html;charset=utf-8," + encodeURIComponent(htmlContent);
+            triggerDownload(dataStr, `report-hebrew-${new Date().toISOString().slice(0,10)}.html`);
+        }
+
+        function triggerDownload(dataStr, fileName) {
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", fileName);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
         }
 
         async function runScan() {
@@ -411,11 +468,11 @@
             let currentScore = 100;
             const lang = document.documentElement.lang;
             
-            // Initialize Report Data
             lastScanData = {
                 timestamp: new Date().toISOString(),
                 language: lang,
-                results: []
+                results: [],
+                score: 0
             };
 
             document.querySelectorAll('.results .list').forEach(list => list.innerHTML = '');
@@ -431,10 +488,9 @@
                         const deduction = createResultLine(containerId, checkId, result, value, result, checkData.points);
                         currentScore -= deduction;
                         
-                        // Save to Report
                         lastScanData.results.push({
                             id: checkId,
-                            title: dict.title,
+                            title: dict.title, // Saved in current UI lang
                             value: value,
                             status: result,
                             impact: dict.impact,
@@ -449,23 +505,22 @@
             }
 
             const finalScore = Math.max(0, currentScore);
-            lastScanData.score = finalScore; // Save score
+            lastScanData.score = finalScore;
             
             $('privacyScore').textContent = finalScore;
             $('privacyScore').style.color = finalScore > 70 ? 'var(--good)' : (finalScore > 40 ? 'var(--warn)' : 'var(--bad)');
             
-            // Show Download Button
-            $('downloadBtn').style.display = 'inline-flex';
+            // Show Download Buttons
+            $('exportGroup').style.display = 'inline-flex';
 
             document.querySelectorAll('.card').forEach(c => c.classList.remove('expanded')); 
             document.querySelectorAll('.card').forEach(c => {
                 if (c.querySelector('.bad, .warn')) c.classList.add('expanded');
             });
             
-            logToConsole(`Scan Complete. Final Score: ${finalScore}. Report ready.`);
+            logToConsole(`Scan Complete. Score: ${finalScore}. Ready to export.`);
         }
 
-        // --- Init ---
         function initLanguage() {
             let savedLang = Storage.get('csp_lang');
             if (!savedLang) {
@@ -486,14 +541,14 @@
 
         // Event Listeners
         $('fullBtn').addEventListener('click', runScan);
-        $('downloadBtn').addEventListener('click', downloadReport);
+        $('downloadJsonBtn').addEventListener('click', downloadJSON);
+        $('downloadHebBtn').addEventListener('click', downloadHTML);
         
         document.addEventListener('DOMContentLoaded', () => {
             initLanguage();
             if (!Storage.get('csp_consent')) $('cookieBanner').style.display = 'flex';
         });
 
-        // Basic toggle logic
         document.querySelectorAll('.toggle').forEach(el => {
             el.addEventListener('click', (e) => {
                 const card = e.currentTarget.closest('.card');
