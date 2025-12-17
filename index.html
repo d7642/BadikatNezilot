@@ -3,557 +3,526 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="Client-Side Privacy & Security Scanner">
-    <title>CyberScan Pro — Advanced Client-Side Audit</title>
-
+    <title>CyberScan Pro — Ultimate Client-Side Auditor</title>
     <style>
-        /* --- Core Variables & Reset --- */
+        /* --- CSS VARIABLES & RESET --- */
         :root {
-            --bg: #060709; 
-            --panel: #111418; 
-            --text-main: #e6eef6; 
-            --text-muted: #98a2ad;
-            --accent: #d33b3b; 
-            --accent-glow: rgba(211, 59, 59, 0.3);
-            --accent2: #1f6feb; 
-            --good: #2ea043; 
-            --warn: #d29922; 
-            --info: #1f6feb;
-            --bad: #f85149;
-            --glass: rgba(255, 255, 255, 0.03); 
-            --border: rgba(255, 255, 255, 0.08); 
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            --font-stack: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+            --bg: #0d1117; 
+            --panel: #161b22; 
+            --border: #30363d;
+            --text-main: #c9d1d9; 
+            --text-muted: #8b949e;
+            --accent: #238636; /* GitHub Greenish */
+            --accent-hover: #2ea043;
+            --danger: #da3633;
+            --warn: #d29922;
+            --info: #58a6ff;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
 
         [data-theme="light"] {
-            --bg: #f0f2f5; 
-            --panel: #ffffff; 
-            --text-main: #1c1e21; 
-            --text-muted: #606770;
-            --accent: #d93025; 
-            --accent-glow: rgba(217, 48, 37, 0.2);
-            --glass: rgba(0, 0, 0, 0.03); 
-            --border: rgba(0, 0, 0, 0.1); 
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --bg: #ffffff; 
+            --panel: #f6f8fa; 
+            --border: #d0d7de;
+            --text-main: #24292f; 
+            --text-muted: #57606a;
+            --accent: #1f883d;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        * { box-sizing: border-box; outline: none; }
-        html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text-main); font-family: var(--font-stack); scroll-behavior: smooth; transition: background 0.3s, color 0.3s; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text-main); font-family: var(--font-stack); font-size: 14px; line-height: 1.5; transition: background 0.3s, color 0.3s; }
         
-        /* --- Layout --- */
-        .app { max-width: 950px; margin: 20px auto; padding: 15px; padding-bottom: 100px; }
+        /* --- LAYOUT --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         
-        /* --- Header --- */
-        header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        .brand { display: flex; align-items: center; gap: 15px; }
-        .logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #7b1515); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: white; box-shadow: 0 0 15px var(--accent-glow); }
-        .brand h1 { margin: 0; font-size: 20px; letter-spacing: -0.5px; }
-        .brand p { margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted); }
+        /* --- HEADER --- */
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; font-weight: bold; }
+        .brand h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        
+        .toolbar { display: flex; gap: 10px; align-items: center; }
+        
+        /* --- BUTTONS --- */
+        button { cursor: pointer; font-family: inherit; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(27,31,36,0.15); font-weight: 600; font-size: 14px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--accent); color: white; border: 1px solid rgba(240,246,252,0.1); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-secondary { background: var(--panel); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: rgba(177,186,196,0.12); }
+        .btn:disabled { opacity: 0.5; cursor: wait; }
 
-        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        
-        /* --- Buttons --- */
-        .btn { background: var(--accent); border: 0; padding: 10px 20px; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; text-decoration: none; }
-        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .btn:active { transform: scale(0.98); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
-        .btn.secondary { background: var(--glass); border: 1px solid var(--border); color: var(--text-main); }
-        .btn.secondary:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
-        
-        .btn-icon { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; color: var(--text-main); }
-        .btn-icon:hover { background: var(--glass); }
+        select { background: var(--panel); color: var(--text-main); border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
 
-        /* --- Score Board --- */
-        .score-box { display: flex; align-items: center; gap: 10px; background: var(--panel); padding: 5px 15px; border-radius: 50px; border: 1px solid var(--border); }
-        #privacyScore { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
-        
-        /* --- Disclaimer Box --- */
-        .disclaimer-card {
-            background: rgba(31, 111, 235, 0.08);
-            border-right: 4px solid var(--accent2);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-        .disclaimer-card strong { color: var(--accent2); display: block; margin-bottom: 5px; font-size: 14px; }
-        .disclaimer-card ul { margin: 5px 0 0 0; padding-right: 20px; color: var(--text-muted); }
+        /* --- STATS --- */
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: 700; display: block; }
+        .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- Result Cards --- */
-        .results-grid { display: flex; flex-direction: column; gap: 15px; }
+        /* --- WARNING BOX --- */
+        .disclaimer { background: rgba(210, 153, 34, 0.15); border: 1px solid var(--warn); color: var(--text-main); padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 13px; }
+        .disclaimer strong { color: var(--warn); display: block; margin-bottom: 5px; }
         
-        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 0; box-shadow: var(--shadow); transition: border-color 0.3s; position: relative; overflow: hidden; }
-        .card:hover { border-color: rgba(255,255,255,0.15); }
-        .card.dragging { opacity: 0.5; border: 2px dashed var(--accent); }
+        /* --- RESULTS --- */
+        .categories { display: flex; flex-direction: column; gap: 15px; }
+        
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .card-header { padding: 12px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .card-header:hover { background: rgba(255,255,255,0.05); }
+        .card-title { font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        
+        .card-body { display: none; padding: 0; }
+        .card.open .card-body { display: block; }
 
-        .card-header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; background: rgba(255,255,255,0.01); }
-        .card-header:hover { background: rgba(255,255,255,0.03); }
+        .check-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+        .check-row:last-child { border-bottom: none; }
+        .check-row:hover { background: rgba(255,255,255,0.02); }
         
-        .card-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 10px; }
-        .card-desc { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-right: 10px; }
+        .check-info { flex: 1; }
+        .check-name { font-weight: 500; display: block; }
+        .check-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         
-        .chev { transition: transform 0.3s ease; color: var(--text-muted); }
-        .expanded .chev { transform: rotate(180deg); }
+        .check-status { text-align: right; margin-left: 15px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .badge.good { background: rgba(46, 160, 67, 0.2); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
+        .badge.warn { background: rgba(210, 153, 34, 0.2); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
+        .badge.bad  { background: rgba(248, 81, 73, 0.2); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .badge.info { background: rgba(56, 139, 253, 0.2); color: #58a6ff; border: 1px solid rgba(56, 139, 253, 0.4); }
+        
+        .check-val { font-family: monospace; font-size: 11px; opacity: 0.8; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .card-body { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); opacity: 0.5; }
-        .expanded .card-body { max-height: 5000px; opacity: 1; transition: max-height 0.5s ease-in-out; border-top: 1px solid var(--border); }
-        
-        /* --- List Items --- */
-        .list-item { padding: 12px 20px; border-bottom: 1px dashed var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-        .list-item:last-child { border-bottom: none; }
-        
-        .badge { padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge.good { background: rgba(46, 160, 67, 0.15); color: var(--good); }
-        .badge.warn { background: rgba(210, 153, 34, 0.15); color: var(--warn); }
-        .badge.bad { background: rgba(248, 81, 73, 0.15); color: var(--bad); }
-        .badge.info { background: rgba(31, 111, 235, 0.15); color: var(--info); }
-
-        .detail-row { background: rgba(0,0,0,0.2); padding: 10px 20px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); display: none; }
-        .list-item:hover + .detail-row, .detail-row:hover { display: block; }
-        .detail-row strong { color: var(--text-main); }
-        
-        /* --- Logs --- */
-        #liveLogs { background: #000; color: #2ea043; font-family: 'Consolas', monospace; font-size: 11px; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-top: 20px; }
-        .log-line { border-bottom: 1px solid #111; padding: 2px 0; }
-        .log-time { color: #555; margin-right: 8px; user-select: none; }
-
-        /* --- Drag Handle --- */
-        .drag-handle { cursor: grab; opacity: 0.3; padding: 5px; margin-left: 10px; }
-        .drag-handle:active { cursor: grabbing; }
+        /* --- LOGS --- */
+        .logs-container { margin-top: 30px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .logs-header { background: #000; padding: 8px 15px; font-size: 12px; color: #8b949e; border-bottom: 1px solid #30363d; }
+        #liveLogs { background: #0d1117; height: 150px; overflow-y: auto; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; color: #3fb950; }
+        .log-line { margin-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .log-ts { color: #58a6ff; margin-right: 8px; }
 
     </style>
 </head>
-
 <body>
 
-    <div class="app">
-        <header>
-            <div class="brand">
-                <div class="logo">CS</div>
-                <div>
-                    <h1>CyberScan Pro</h1>
-                    <p>Advanced Client-Side Security Auditor</p>
-                </div>
+<div class="container">
+    <header>
+        <div class="brand">
+            <div class="logo">CS</div>
+            <div>
+                <h1 data-i18n="appTitle">CyberScan Pro</h1>
+                <small style="color:var(--text-muted)" data-i18n="appSubtitle">Client-Side Security & Privacy Auditor</small>
             </div>
-
-            <div class="controls">
-                <div class="score-box">
-                    <span id="privacyScore">—</span>
-                    <span style="font-size:11px; color:var(--text-muted)">ציון אבטחה</span>
-                </div>
-                <button class="btn-icon" id="themeToggle" title="החלף ערכת נושא">🌗</button>
+        </div>
+        <div class="toolbar">
+            <select id="langSelect">
+                <option value="he">🇮🇱 עברית</option>
+                <option value="en">🇺🇸 English</option>
+            </select>
+            <button class="btn btn-secondary" id="themeToggle">🌗</button>
+            <div id="exportBtns" style="display:none; gap:5px;">
+                <button class="btn btn-secondary" onclick="exportHTML()">📄 HTML</button>
+                <button class="btn btn-secondary" onclick="exportJSON()">{} JSON</button>
             </div>
+            <button class="btn btn-primary" id="startBtn" onclick="runFullScan()">
+                <span data-i18n="btnStart">Run Scan</span>
+            </button>
+        </div>
+    </header>
 
-            <div style="width: 100%; display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                <div id="exportGroup" style="display:none; gap:10px;">
-                    <button id="downloadHebBtn" class="btn secondary">📄 דוח מלא (HTML)</button>
-                    <button id="downloadJsonBtn" class="btn secondary">{ } דוח נתונים (JSON)</button>
-                </div>
+    <div class="disclaimer">
+        <strong data-i18n="discTitle">⚠️ Disclaimer (Client-Side Only)</strong>
+        <span data-i18n="discText">
+            This tool runs entirely in your browser. It cannot check server-side configurations (like HttpOnly cookies, DB vulnerabilities, or WAFs). 
+            Findings are indicators based on what JavaScript can access.
+        </span>
+    </div>
 
-                <button id="startScanBtn" class="btn">
-                    <span>🔍 התחל סריקה מלאה</span>
-                </button>
-            </div>
-        </header>
+    <div class="stats-bar">
+        <div class="stat-card">
+            <span class="stat-val" id="scoreVal">—</span>
+            <span class="stat-label" data-i18n="statScore">Security Score</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-val" id="riskVal">0</span>
+            <span class="stat-label" data-i18n="statRisks">Risks Found</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-val" id="checksVal">0</span>
+            <span class="stat-label" data-i18n="statChecks">Checks Run</span>
+        </div>
+    </div>
 
-        <div class="disclaimer-card">
-            <strong>⚠️ הצהרת אמינות (Client-Side Limitations)</strong>
-            דוח זה מבוסס על סריקת JavaScript בדפדפן הלקוח בלבד.
-            <ul>
-                <li>בדיקות שרת (Server-Side) אינן אפשריות מכאן (כגון DB Injection, WAF, Server Version).</li>
-                <li>כותרות אבטחה מסוימות (HSTS, HttpOnly Cookies) אינן גלויות ל-JavaScript מטעמי אבטחה, ולכן יסומנו כ-INFO.</li>
-                <li>הדוח משקף את מה שהדפדפן "רואה" בלבד.</li>
-            </ul>
+    <div class="categories" id="resultsArea">
         </div>
 
-        <div class="results-grid" id="resultsContainer">
-            </div>
-
-        <h4 style="margin: 20px 0 5px 0; font-size:13px; color:var(--text-muted); opacity:0.7;">System Logs</h4>
+    <div class="logs-container">
+        <div class="logs-header">System Terminal (Live)</div>
         <div id="liveLogs"></div>
     </div>
+</div>
 
-    <script>
-        'use strict';
+<script>
+/**
+ * CYBERSCAN PRO - ULTIMATE EDITION
+ * Includes comprehensive checks, i18n, and safe DOM manipulation.
+ */
 
-        // --- 1. Utility & Security Functions ---
+// --- 1. CONFIGURATION & DICTIONARIES ---
+
+const I18N = {
+    he: {
+        appTitle: "CyberScan Pro",
+        appSubtitle: "כלי סריקת אבטחה ופרטיות (צד-לקוח)",
+        btnStart: "התחל סריקה מלאה",
+        btnScanning: "סורק...",
+        discTitle: "⚠️ גילוי נאות (מגבלות דפדפן)",
+        discText: "כלי זה רץ בדפדפן בלבד. הוא אינו יכול לבדוק הגדרות שרת (כגון מסד נתונים, חומת אש, או עוגיות HttpOnly). הממצאים משקפים את מה ש-JavaScript יכול לראות.",
+        statScore: "ציון אבטחה",
+        statRisks: "סיכונים שנמצאו",
+        statChecks: "בדיקות שבוצעו",
+        cats: {
+            conn: "🔒 חיבור והצפנה",
+            xss: "💉 הגנה מפני הזרקות (XSS/DOM)",
+            priv: "🕵️ פרטיות וטביעת אצבע (FP)",
+            store: "💾 אחסון ונתונים מקומיים",
+            env: "🌐 סביבת הרצה ורשת",
+            perms: "🔑 הרשאות והתקנים"
+        },
+        results: { good: "תקין", bad: "קריטי", warn: "אזהרה", info: "לידיעה" }
+    },
+    en: {
+        appTitle: "CyberScan Pro",
+        appSubtitle: "Client-Side Security & Privacy Auditor",
+        btnStart: "Start Full Scan",
+        btnScanning: "Scanning...",
+        discTitle: "⚠️ Disclaimer (Client-Side Only)",
+        discText: "This tool runs entirely in your browser. It cannot check server-side configurations. Findings are indicators based on what JavaScript can access.",
+        statScore: "Security Score",
+        statRisks: "Risks Found",
+        statChecks: "Checks Performed",
+        cats: {
+            conn: "🔒 Connection & Encryption",
+            xss: "💉 Injection Protection (XSS/DOM)",
+            priv: "🕵️ Privacy & Fingerprinting",
+            store: "💾 Storage & Data",
+            env: "🌐 Environment & Network",
+            perms: "🔑 Permissions & Devices"
+        },
+        results: { good: "Secure", bad: "Critical", warn: "Warning", info: "Info" }
+    }
+};
+
+// --- 2. THE CHECK ENGINE (Massive List) ---
+
+const CHECKS = [
+    // --- GROUP: CONNECTION ---
+    {
+        id: 'https', group: 'conn',
+        run: async () => ({ val: location.protocol, score: location.protocol === 'https:' ? 10 : 0, status: location.protocol === 'https:' ? 'good' : 'bad' }),
+        txt: { he: { t: 'פרוטוקול HTTPS', d: 'האם התקשורת מוצפנת.' }, en: { t: 'HTTPS Protocol', d: 'Is communication encrypted.' } }
+    },
+    {
+        id: 'hsts', group: 'conn',
+        run: async () => ({ val: 'Hidden from JS', score: 0, status: 'info' }),
+        txt: { he: { t: 'אכיפת HSTS', d: 'לא ניתן לוודא בצד לקוח (Header שרת).' }, en: { t: 'HSTS Enforcement', d: 'Cannot verify client-side (Server Header).' } }
+    },
+    {
+        id: 'upgrade_insecure', group: 'conn',
+        run: async () => {
+             const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+             const hasUpgrade = meta && meta.content.includes('upgrade-insecure-requests');
+             return { val: hasUpgrade ? 'Yes' : 'No', score: hasUpgrade ? 5 : 0, status: hasUpgrade ? 'good' : 'info' };
+        },
+        txt: { he: { t: 'שדרוג בקשות (CSP)', d: 'האם מוגדר upgrade-insecure-requests.' }, en: { t: 'Upgrade Insecure Requests', d: 'CSP directive check.' } }
+    },
+
+    // --- GROUP: XSS / INJECTION ---
+    {
+        id: 'csp_meta', group: 'xss',
+        run: async () => {
+            const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+            return { val: meta ? 'Found' : 'Missing', score: meta ? 10 : 0, status: meta ? 'good' : 'warn' };
+        },
+        txt: { he: { t: 'CSP (Meta Tag)', d: 'הגנה בסיסית מפני XSS.' }, en: { t: 'CSP (Meta Tag)', d: 'Basic XSS protection.' } }
+    },
+    {
+        id: 'xframe', group: 'xss',
+        run: async () => ({ val: (window.self !== window.top) ? 'In Iframe' : 'Top Level', score: 0, status: (window.self !== window.top) ? 'info' : 'good' }),
+        txt: { he: { t: 'בדיקת Iframe', d: 'האם האתר נטען בתוך אתר אחר (Clickjacking).' }, en: { t: 'Iframe Check', d: 'Is site loaded inside another (Clickjacking).' } }
+    },
+    {
+        id: 'opener', group: 'xss',
+        run: async () => ({ val: window.opener ? 'Present' : 'Null', score: window.opener ? -5 : 0, status: window.opener ? 'warn' : 'good' }),
+        txt: { he: { t: 'Window Opener', d: 'סכנת Reverse Tabnabbing.' }, en: { t: 'Window Opener', d: 'Reverse Tabnabbing risk.' } }
+    },
+    {
+        id: 'url_xss', group: 'xss',
+        run: async () => {
+            const risky = location.href.includes('<') || location.href.includes('javascript:');
+            return { val: risky ? 'Detected' : 'Clean', score: risky ? -10 : 0, status: risky ? 'bad' : 'good' };
+        },
+        txt: { he: { t: 'הזרקה ב-URL', d: 'תווים מסוכנים בשורת הכתובת.' }, en: { t: 'URL Injection', d: 'Dangerous chars in address bar.' } }
+    },
+
+    // --- GROUP: PRIVACY / FINGERPRINTING ---
+    {
+        id: 'canvas_fp', group: 'priv',
+        run: async () => ({ val: 'API Available', score: -5, status: 'warn' }),
+        txt: { he: { t: 'Canvas Fingerprint', d: 'יכולת לזהות מכשיר לפי רינדור גרפי.' }, en: { t: 'Canvas Fingerprint', d: 'Device ID via graphic rendering.' } }
+    },
+    {
+        id: 'ua_info', group: 'priv',
+        run: async () => ({ val: navigator.userAgent.substring(0, 30) + '...', score: 0, status: 'info' }),
+        txt: { he: { t: 'User Agent', d: 'מידע על הדפדפן ומערכת ההפעלה.' }, en: { t: 'User Agent', d: 'Browser and OS info.' } }
+    },
+    {
+        id: 'do_not_track', group: 'priv',
+        run: async () => ({ val: navigator.doNotTrack || 'Unset', score: navigator.doNotTrack === '1' ? 5 : 0, status: 'info' }),
+        txt: { he: { t: 'Do Not Track', d: 'בקשת משתמש למניעת מעקב.' }, en: { t: 'Do Not Track', d: 'User tracking preference.' } }
+    },
+    {
+        id: 'gpc', group: 'priv',
+        run: async () => ({ val: navigator.globalPrivacyControl ? 'Yes' : 'No', score: 0, status: navigator.globalPrivacyControl ? 'good' : 'info' }),
+        txt: { he: { t: 'Global Privacy Control', d: 'תקן פרטיות חדש.' }, en: { t: 'Global Privacy Control', d: 'New privacy standard.' } }
+    },
+    
+    // --- GROUP: STORAGE ---
+    {
+        id: 'cookies_js', group: 'store',
+        run: async () => ({ val: document.cookie ? 'Accessible' : 'Empty/Protected', score: document.cookie ? -5 : 5, status: document.cookie ? 'warn' : 'good' }),
+        txt: { he: { t: 'גישת JS לעוגיות', d: 'עוגיות ללא HttpOnly חשופות לגניבה.' }, en: { t: 'JS Cookie Access', d: 'Cookies without HttpOnly are exposed.' } }
+    },
+    {
+        id: 'local_storage', group: 'store',
+        run: async () => ({ val: `${localStorage.length} items`, score: 0, status: localStorage.length > 0 ? 'info' : 'good' }),
+        txt: { he: { t: 'LocalStorage', d: 'פריטים שמורים בדפדפן לצמיתות.' }, en: { t: 'LocalStorage', d: 'Persisted browser data.' } }
+    },
+    {
+        id: 'session_storage', group: 'store',
+        run: async () => ({ val: `${sessionStorage.length} items`, score: 0, status: 'info' }),
+        txt: { he: { t: 'SessionStorage', d: 'מידע זמני לסשן הנוכחי.' }, en: { t: 'SessionStorage', d: 'Temporary session data.' } }
+    },
+
+    // --- GROUP: ENV / NETWORK ---
+    {
+        id: 'referrer', group: 'env',
+        run: async () => ({ val: document.referrerPolicy || 'Default', score: document.referrerPolicy ? 5 : 0, status: document.referrerPolicy ? 'good' : 'warn' }),
+        txt: { he: { t: 'Referrer Policy', d: 'דליפת מידע במעבר בין אתרים.' }, en: { t: 'Referrer Policy', d: 'Info leak between sites.' } }
+    },
+    {
+        id: 'webrtc', group: 'env',
+        run: async () => ({ val: window.RTCPeerConnection ? 'Active' : 'Disabled', score: -5, status: window.RTCPeerConnection ? 'warn' : 'good' }),
+        txt: { he: { t: 'WebRTC Leak', d: 'פוטנציאל לחשיפת IP אמיתי (VPN Bypass).' }, en: { t: 'WebRTC Leak', d: 'Potential Real IP Leak.' } }
+    },
+    {
+        id: 'connection', group: 'env',
+        run: async () => ({ val: navigator.connection ? navigator.connection.effectiveType : 'Unknown', score: 0, status: 'info' }),
+        txt: { he: { t: 'Network Info', d: 'סוג חיבור רשת.' }, en: { t: 'Network Info', d: 'Connection type.' } }
+    },
+
+    // --- GROUP: PERMISSIONS & HW ---
+    {
+        id: 'geo_perm', group: 'perms',
+        run: async () => {
+            try { const s = await navigator.permissions.query({name:'geolocation'}); return { val: s.state, score: s.state==='granted'?-10:0, status: s.state==='granted'?'bad':'good' }; }
+            catch(e) { return { val: 'Unknown', score: 0, status: 'info' }; }
+        },
+        txt: { he: { t: 'הרשאת מיקום', d: 'גישה ל-GPS.' }, en: { t: 'Geolocation', d: 'GPS Access.' } }
+    },
+    {
+        id: 'cam_perm', group: 'perms',
+        run: async () => {
+             try { const s = await navigator.permissions.query({name:'camera'}); return { val: s.state, score: s.state==='granted'?-10:0, status: s.state==='granted'?'bad':'good' }; }
+             catch(e) { return { val: 'Check Blocked', score: 0, status: 'info' }; }
+        },
+        txt: { he: { t: 'הרשאת מצלמה', d: 'גישה למצלמת רשת.' }, en: { t: 'Camera', d: 'Webcam Access.' } }
+    },
+    {
+        id: 'battery', group: 'perms',
+        run: async () => {
+            if(navigator.getBattery) { const b = await navigator.getBattery(); return { val: `${Math.round(b.level*100)}%`, score: 0, status: 'warn' }; }
+            return { val: 'API Unsupported', score: 0, status: 'good' };
+        },
+        txt: { he: { t: 'Battery API', d: 'שימוש בסוללה למעקב.' }, en: { t: 'Battery API', d: 'Tracking via battery status.' } }
+    },
+    {
+        id: 'hardware', group: 'perms',
+        run: async () => ({ val: `Cores: ${navigator.hardwareConcurrency || '?'}`, score: 0, status: 'info' }),
+        txt: { he: { t: 'חומרת מכשיר', d: 'ליבות מעבד (Fingerprinting).' }, en: { t: 'Hardware Info', d: 'CPU Cores (Fingerprinting).' } }
+    }
+];
+
+// --- 3. CORE LOGIC ---
+
+let currentLang = 'he';
+let scanResults = null;
+
+const $ = id => document.getElementById(id);
+const escapeHTML = str => {
+    if(typeof str !== 'string') return str;
+    return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"': '&quot;'}[tag]));
+};
+
+function log(msg) {
+    const box = $('liveLogs');
+    const d = new Date().toLocaleTimeString();
+    box.innerHTML += `<div class="log-line"><span class="log-ts">[${d}]</span>${escapeHTML(msg)}</div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function setLang(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+    
+    // Update simple UI texts
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(I18N[lang][key]) el.textContent = I18N[lang][key];
+    });
+
+    // If results exist, re-render them in new language
+    if(scanResults) renderResults();
+}
+
+async function runFullScan() {
+    log('Initializing scan engine...');
+    const btn = $('startBtn');
+    btn.disabled = true;
+    btn.innerHTML = `⏳ ${I18N[currentLang].btnScanning}`;
+    
+    scanResults = { items: [], score: 100, risks: 0 };
+    const items = [];
+    
+    // Clean UI
+    $('resultsArea').innerHTML = '';
+    
+    for(const check of CHECKS) {
+        log(`Running check: ${check.id}...`);
+        try {
+            const res = await check.run();
+            // Calculate score (simple logic: start at 100, deduct for bad things)
+            if(res.status === 'bad') { scanResults.score -= 10; scanResults.risks++; }
+            if(res.status === 'warn') { scanResults.score -= 5; scanResults.risks++; }
+            
+            items.push({ ...check, result: res });
+        } catch(e) {
+            log(`Error in ${check.id}: ${e.message}`);
+        }
+    }
+    
+    scanResults.score = Math.max(0, scanResults.score);
+    scanResults.items = items;
+    scanResults.date = new Date().toISOString();
+
+    updateStats();
+    renderResults();
+    
+    $('exportBtns').style.display = 'flex';
+    btn.disabled = false;
+    btn.textContent = I18N[currentLang].btnStart;
+    log(`Scan complete. Score: ${scanResults.score}`);
+}
+
+function updateStats() {
+    $('scoreVal').textContent = scanResults.score;
+    $('scoreVal').style.color = scanResults.score > 80 ? 'var(--accent)' : (scanResults.score > 50 ? 'var(--warn)' : 'var(--danger)');
+    $('riskVal').textContent = scanResults.risks;
+    $('checksVal').textContent = scanResults.items.length;
+}
+
+function renderResults() {
+    const area = $('resultsArea');
+    area.innerHTML = '';
+    
+    // Group by category
+    const groups = {};
+    scanResults.items.forEach(item => {
+        if(!groups[item.group]) groups[item.group] = [];
+        groups[item.group].push(item);
+    });
+
+    for(const [grpId, items] of Object.entries(groups)) {
+        const catName = I18N[currentLang].cats[grpId] || grpId;
+        const card = document.createElement('div');
+        card.className = 'card open'; // Default open
         
-        const $ = id => document.getElementById(id);
-        
-        // Critical for Security: Prevents XSS in the report
-        function escapeHTML(str) {
-            if (typeof str !== 'string') return str;
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[tag]));
-        }
-
-        function log(msg) {
-            const container = $('liveLogs');
-            const div = document.createElement('div');
-            div.className = 'log-line';
-            div.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> ${escapeHTML(msg)}`;
-            container.prepend(div);
-        }
-
-        // --- 2. Data Definitions (The Checks) ---
-
-        // Categories
-        const GROUPS = {
-            conn:   { title: '🔒 חיבור והצפנה', desc: 'HTTPS, HSTS, Protocol' },
-            script: { title: '💉 הגנה מפני הזרקות', desc: 'XSS, CSP, DOM Sinks' },
-            fp:     { title: '🕵️ פרטיות ומעקב', desc: 'Fingerprinting, Canvas, APIs' },
-            storage:{ title: '🍪 אחסון ונתונים', desc: 'Cookies, LocalStorage, Cache' },
-            api:    { title: '🌐 רשת ו-APIs', desc: 'WebRTC, Referrer, Fetch' }
-        };
-
-        // The Checks Logic - Adjusted for REALITY (Info vs Warn)
-        const CHECKS = [
-            // --- Connection ---
-            {
-                id: 'https_status', group: 'conn', points: 20,
-                title: 'פרוטוקול HTTPS',
-                run: () => ({ val: location.protocol, status: location.protocol === 'https:' ? 'good' : 'bad' }),
-                details: { info: 'פרוטוקול התקשורת הנוכחי.', fix: 'חובה להשתמש בתעודת SSL תקינה.' }
-            },
-            {
-                id: 'hsts_check', group: 'conn', points: 0, // 0 points because JS can't see it
-                title: 'אכיפת HSTS',
-                run: () => ({ val: 'Header Hidden from JS', status: 'info' }),
-                details: { info: 'HSTS מונע שנמוך ל-HTTP. לא ניתן לוודא בצד לקוח.', fix: 'יש לוודא הגדרה בשרת (Strict-Transport-Security).' }
-            },
-
-            // --- Script / XSS ---
-            {
-                id: 'csp_check', group: 'script', points: 15,
-                title: 'מדיניות CSP (זיהוי חלקי)',
-                run: () => {
-                    // JS can only see META tags, not headers
-                    const metaCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-                    return { val: metaCSP ? 'Meta Tag Found' : 'No Meta Tag', status: metaCSP ? 'good' : 'info' }; 
-                },
-                details: { info: 'CSP מגן מפני XSS. אם מוגדר ב-Header, ה-JS לא יראה זאת.', fix: 'מומלץ להגדיר CSP מחמיר בשרת.' }
-            },
-            {
-                id: 'xss_reflection', group: 'script', points: 10,
-                title: 'הזרקת URL (Reflected)',
-                run: () => {
-                    const unsafe = location.href.includes('<') || location.href.includes('javascript:');
-                    return { val: unsafe ? 'Suspicious URL' : 'Clean URL', status: unsafe ? 'bad' : 'good' };
-                },
-                details: { info: 'בדיקה האם ה-URL מכיל תווים מסוכנים.', fix: 'יש לסנן קלט בשרת ולקודד פלט.' }
-            },
-            {
-                id: 'iframe_check', group: 'script', points: 5,
-                title: 'Iframe Sandbox',
-                run: () => ({ val: window.self !== window.top ? 'Inside Iframe' : 'Top Level', status: 'info' }),
-                details: { info: 'האם האתר נטען בתוך Iframe.', fix: 'שימוש ב-X-Frame-Options למניעת Clickjacking.' }
-            },
-
-            // --- Privacy / FP ---
-            {
-                id: 'canvas_fp', group: 'fp', points: 5,
-                title: 'זיהוי Canvas (Fingerprinting)',
-                run: () => ({ val: 'API זמין לשימוש', status: 'warn' }),
-                details: { info: 'האתר יכול להשתמש ב-Canvas לזיהוי ייחודי של המכשיר.', fix: 'זו יכולת דפדפן, לא חולשת אבטחה. משפיע על פרטיות.' }
-            },
-            {
-                id: 'geo_perm', group: 'fp', points: 10,
-                title: 'הרשאת מיקום (Geolocation)',
-                run: async () => {
-                    try {
-                        const s = await navigator.permissions.query({name:'geolocation'});
-                        return { val: s.state, status: s.state === 'granted' ? 'bad' : 'good' };
-                    } catch(e) { return { val: 'Unknown', status: 'info' }; }
-                },
-                details: { info: 'האם לאתר יש גישה למיקום הפיזי.', fix: 'יש לאפס הרשאות אם האתר אינו זקוק למיקום.' }
-            },
-
-            // --- Storage ---
-            {
-                id: 'cookie_secure', group: 'storage', points: 0,
-                title: 'עוגיות מאובטחות',
-                run: () => ({ val: 'JS Access Check', status: 'info' }),
-                details: { info: 'עוגיות HttpOnly מוסתרות מ-JS ולכן לא ניתן לבדוק דגל Secure בוודאות.', fix: 'יש לוודא דגלי Secure; HttpOnly; SameSite בשרת.' }
-            },
-            {
-                id: 'local_storage', group: 'storage', points: 5,
-                title: 'שימוש ב-LocalStorage',
-                run: () => ({ val: `${localStorage.length} פריטים`, status: localStorage.length > 5 ? 'warn' : 'good' }),
-                details: { info: 'מידע שנשמר מקומית בדפדפן.', fix: 'אין לשמור מידע רגיש (Token, PII) ב-LocalStorage.' }
-            },
-
-            // --- API / Network ---
-            {
-                id: 'referrer_policy', group: 'api', points: 5,
-                title: 'מדיניות Referrer',
-                run: () => ({ val: document.referrerPolicy || 'Default', status: document.referrerPolicy ? 'good' : 'warn' }),
-                details: { info: 'שולט במידע שנשלח לאתרים אחרים בעת לחיצה על קישור.', fix: 'מומלץ: strict-origin-when-cross-origin.' }
-            }
-        ];
-
-        let lastScanReport = null;
-
-        // --- 3. UI Generation Functions ---
-
-        function initUI() {
-            const container = $('resultsContainer');
-            container.innerHTML = '';
-            
-            // Generate cards for each group
-            for (const [key, group] of Object.entries(GROUPS)) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.id = `card-${key}`;
-                card.setAttribute('draggable', true); // Drag & Drop support
-                
-                card.innerHTML = `
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="card-title">
-                            <span class="drag-handle">::</span>
-                            ${group.title}
-                        </div>
-                        <div style="display:flex; align-items:center;">
-                            <span class="card-desc">${group.desc}</span>
-                            <span class="chev">▼</span>
-                        </div>
+        let rowsHtml = '';
+        items.forEach(item => {
+            const txt = item.txt[currentLang];
+            rowsHtml += `
+                <div class="check-row">
+                    <div class="check-info">
+                        <span class="check-name">${escapeHTML(txt.t)}</span>
+                        <span class="check-desc">${escapeHTML(txt.d)}</span>
                     </div>
-                    <div class="card-body">
-                        <div class="list-wrapper" id="list-${key}"></div>
+                    <div class="check-status">
+                        <span class="badge ${item.result.status}">${I18N[currentLang].results[item.result.status]}</span>
+                        <span class="check-val">${escapeHTML(String(item.result.val))}</span>
                     </div>
-                `;
-                container.appendChild(card);
-            }
-            
-            setupDragAndDrop();
-        }
-
-        function toggleCard(header) {
-            header.parentElement.classList.toggle('expanded');
-        }
-
-        // --- 4. Scanning Logic ---
-
-        async function runScan() {
-            log('Starting full system scan...');
-            const btn = $('startScanBtn');
-            btn.disabled = true;
-            btn.innerHTML = '⏳ סורק...';
-
-            let score = 100;
-            const items = [];
-            
-            // Reset UI
-            document.querySelectorAll('.list-wrapper').forEach(el => el.innerHTML = '');
-
-            // Run Checks
-            for (const check of CHECKS) {
-                try {
-                    const result = await check.run();
-                    
-                    // Score calculation (only deduct for confirmed bad findings)
-                    if (result.status === 'bad') score -= check.points;
-                    if (result.status === 'warn') score -= (check.points / 2);
-
-                    const itemData = {
-                        ...check,
-                        result: result
-                    };
-                    items.push(itemData);
-
-                    // Render to UI
-                    renderResultItem(itemData);
-                    
-                } catch (e) {
-                    console.error(e);
-                    log(`Error running ${check.id}`);
-                }
-            }
-
-            score = Math.max(0, Math.round(score));
-            
-            // Update Score UI
-            const scoreEl = $('privacyScore');
-            scoreEl.textContent = score;
-            scoreEl.style.color = score > 80 ? 'var(--good)' : (score > 50 ? 'var(--warn)' : 'var(--bad)');
-
-            // Save Data for Export
-            lastScanReport = {
-                date: new Date().toISOString(),
-                score: score,
-                items: items,
-                userAgent: navigator.userAgent
-            };
-
-            // Show Export Buttons
-            $('exportGroup').style.display = 'flex';
-            
-            btn.innerHTML = '✅ סריקה הושלמה';
-            btn.disabled = false;
-            log(`Scan finished. Score: ${score}`);
-            
-            // Auto expand cards with issues
-            document.querySelectorAll('.card').forEach(c => {
-                if(c.querySelector('.badge.bad') || c.querySelector('.badge.warn')) {
-                    c.classList.add('expanded');
-                }
-            });
-        }
-
-        function renderResultItem(data) {
-            const container = $(`list-${data.group}`);
-            if (!container) return;
-
-            const div = document.createElement('div');
-            // Safe rendering using escapeHTML
-            div.innerHTML = `
-                <div class="list-item">
-                    <span>${escapeHTML(data.title)}</span>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-family:monospace; font-size:11px; opacity:0.8;">${escapeHTML(String(data.result.val))}</span>
-                        <span class="badge ${data.result.status}">${data.result.status}</span>
-                    </div>
-                </div>
-                <div class="detail-row">
-                    <div><strong>משמעות:</strong> ${escapeHTML(data.details.info)}</div>
-                    <div style="margin-top:4px; color:var(--accent2);"><strong>המלצה:</strong> ${escapeHTML(data.details.fix)}</div>
                 </div>
             `;
-            container.appendChild(div);
-        }
-
-        // --- 5. Export Functions (JSON & HTML) ---
-
-        function downloadJSON() {
-            if (!lastScanReport) return alert('אין נתונים להורדה');
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lastScanReport, null, 2));
-            const a = document.createElement('a');
-            a.href = dataStr;
-            a.download = `cyberscan_report_${Date.now()}.json`;
-            a.click();
-        }
-
-        function downloadHTML() {
-            if (!lastScanReport) return alert('אין נתונים להורדה');
-            
-            // Generating a self-contained HTML report
-            let itemsHtml = '';
-            lastScanReport.items.forEach(item => {
-                const color = item.result.status === 'good' ? '#2ea043' : (item.result.status === 'bad' ? '#f85149' : (item.result.status === 'warn' ? '#d29922' : '#1f6feb'));
-                
-                itemsHtml += `
-                <div class="item" style="border-right: 4px solid ${color};">
-                    <div class="header">
-                        <strong>${escapeHTML(item.title)}</strong>
-                        <span class="badge" style="background:${color}20; color:${color}">${item.result.status.toUpperCase()}</span>
-                    </div>
-                    <div class="value">ממצא: ${escapeHTML(String(item.result.val))}</div>
-                    <div class="desc">${escapeHTML(item.details.info)}</div>
-                    <div class="fix">💡 תיקון: ${escapeHTML(item.details.fix)}</div>
-                </div>`;
-            });
-
-            const htmlContent = `
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>CyberScan Report</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f6f8; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-        h1 { color: #d33b3b; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .summary { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .score { font-size: 24px; font-weight: bold; color: ${lastScanReport.score > 80 ? 'green' : 'red'}; }
-        .disclaimer { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; font-size: 13px; margin-bottom: 20px; }
-        .item { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .value { font-family: monospace; background: #f0f0f0; padding: 2px 5px; display: inline-block; border-radius: 3px; font-size: 12px; margin-bottom: 5px; }
-        .desc { font-size: 13px; color: #555; }
-        .fix { font-size: 13px; font-weight: bold; margin-top: 5px; color: #0366d6; }
-        .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>דוח סריקת צד-לקוח</h1>
-    <div class="disclaimer">
-        <strong>⚠️ הערה חשובה:</strong> בדיקות אלו בוצעו ברמת הדפדפן (Client-Side) בלבד. הגדרות שרת פנימיות (כגון HttpOnly Cookies, HSTS) אינן ניתנות לאימות מלא בדרך זו וייתכן שהן מוגדרות כראוי בשרת למרות שאינן מופיעות כאן.
-    </div>
-    <div class="summary">
-        <div>תאריך: ${new Date().toLocaleString()}</div>
-        <div>ציון משוקלל: <span class="score">${lastScanReport.score}/100</span></div>
-    </div>
-    <div class="results">
-        ${itemsHtml}
-    </div>
-</body>
-</html>`;
-
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cyberscan_report_hebrew.html`;
-            a.click();
-        }
-
-        // --- 6. Drag & Drop Logic (Restored) ---
-        function setupDragAndDrop() {
-            const draggables = document.querySelectorAll('.card');
-            const container = document.querySelector('.results-grid');
-
-            draggables.forEach(draggable => {
-                draggable.addEventListener('dragstart', () => {
-                    draggable.classList.add('dragging');
-                });
-                draggable.addEventListener('dragend', () => {
-                    draggable.classList.remove('dragging');
-                });
-            });
-
-            container.addEventListener('dragover', e => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(container, e.clientY);
-                const draggable = document.querySelector('.dragging');
-                if (afterElement == null) {
-                    container.appendChild(draggable);
-                } else {
-                    container.insertBefore(draggable, afterElement);
-                }
-            });
-        }
-
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        // --- 7. Init ---
-        
-        $('startScanBtn').addEventListener('click', runScan);
-        $('downloadJsonBtn').addEventListener('click', downloadJSON);
-        $('downloadHebBtn').addEventListener('click', downloadHTML);
-        
-        // Theme Toggle
-        $('themeToggle').addEventListener('click', () => {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
         });
 
-        // Initialize UI
-        initUI();
+        card.innerHTML = `
+            <div class="card-header" onclick="this.parentElement.classList.toggle('open')">
+                <div class="card-title">${escapeHTML(catName)}</div>
+                <span>▼</span>
+            </div>
+            <div class="card-body">${rowsHtml}</div>
+        `;
+        area.appendChild(card);
+    }
+}
 
-    </script>
+// --- 4. EXPORT FUNCTIONS ---
+
+function exportJSON() {
+    if(!scanResults) return;
+    const blob = new Blob([JSON.stringify(scanResults, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'cyberscan_results.json';
+    a.click();
+}
+
+function exportHTML() {
+    if(!scanResults) return;
+    // We recreate a standalone HTML report
+    let htmlBody = `<h1>CyberScan Report</h1><p>Date: ${scanResults.date}</p><hr>`;
+    
+    scanResults.items.forEach(item => {
+        const txt = item.txt[currentLang];
+        htmlBody += `<div style="padding:10px; border-bottom:1px solid #ccc">
+            <strong>${escapeHTML(txt.t)}</strong> [${item.result.status.toUpperCase()}]<br>
+            <small>${escapeHTML(txt.d)}</small><br>
+            Value: <code>${escapeHTML(String(item.result.val))}</code>
+        </div>`;
+    });
+
+    const fullHtml = `<!DOCTYPE html><html dir="${currentLang==='he'?'rtl':'ltr'}">
+    <head><meta charset="utf-8"><title>Report</title><style>body{font-family:sans-serif;padding:20px;}</style></head>
+    <body>${htmlBody}</body></html>`;
+
+    const blob = new Blob([fullHtml], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'cyberscan_report.html';
+    a.click();
+}
+
+// --- 5. INIT ---
+
+$('langSelect').addEventListener('change', (e) => setLang(e.target.value));
+$('themeToggle').addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+});
+
+// Set initial state
+setLang('he');
+
+</script>
 </body>
 </html>
