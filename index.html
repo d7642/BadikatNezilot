@@ -2,458 +2,82 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberScan Elite - System Audit</title>
     <style>
-        :root {
-            --bg-color: #050505;
-            --panel-color: #0f1115;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent-color: #ff3333; /* Hacker Red */
-            --accent-dim: rgba(255, 51, 51, 0.1);
-            --border-color: #333;
-            --success-color: #00ff41;
-            --warning-color: #ffb700;
-        }
-
-        * { box-sizing: border-box; outline: none; }
-        
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 20px;
-            flex: 1;
-            width: 100%;
-        }
-
-        /* --- HEADER --- */
-        header {
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .brand h1 {
-            margin: 0;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--accent-color);
-            font-size: 24px;
-        }
-
-        .brand span { font-size: 12px; color: var(--text-secondary); }
-
-        /* --- CONTROLS --- */
-        .controls { display: flex; gap: 10px; }
-
-        button {
-            background: var(--panel-color);
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: all 0.3s;
-            font-size: 13px;
-        }
-
-        button:hover {
-            background: var(--accent-color);
-            color: #000;
-            box-shadow: 0 0 15px var(--accent-color);
-        }
-
-        button.support-btn {
-            border-color: var(--text-secondary);
-            color: var(--text-secondary);
-        }
-        button.support-btn:hover {
-            background: var(--text-secondary);
-            color: #000;
-            box-shadow: 0 0 10px var(--text-secondary);
-        }
-
-        /* --- SCORE BOARD --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            background: var(--panel-color);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            text-align: center;
-            border-radius: 4px;
-        }
-
-        .stat-val { font-size: 28px; font-weight: bold; color: var(--text-primary); display: block; }
-        .stat-lbl { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
-
-        /* --- RESULTS LIST --- */
-        .scan-group {
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            background: rgba(15, 17, 21, 0.8);
-        }
-
-        .group-header {
-            padding: 10px 15px;
-            background: rgba(255,255,255,0.05);
-            font-weight: bold;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .item {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .item:last-child { border-bottom: none; }
-
-        .item-top { display: flex; justify-content: space-between; align-items: center; }
-        .item-title { font-weight: bold; font-size: 15px; }
-        
-        .badge { padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 2px; text-transform: uppercase; }
-        .badge-good { color: var(--success-color); border: 1px solid var(--success-color); background: rgba(0, 255, 65, 0.1); }
-        .badge-bad { color: var(--accent-color); border: 1px solid var(--accent-color); background: rgba(255, 51, 51, 0.1); box-shadow: 0 0 5px rgba(255,0,0,0.2); }
-        .badge-warn { color: var(--warning-color); border: 1px solid var(--warning-color); background: rgba(255, 183, 0, 0.1); }
-        .badge-info { color: #00d9ff; border: 1px solid #00d9ff; background: rgba(0, 217, 255, 0.1); }
-
-        .fix-box {
-            display: none;
-            background: rgba(0,0,0,0.3);
-            border-right: 3px solid var(--accent-color);
-            padding: 10px;
-            margin-top: 5px;
-            font-size: 13px;
-            color: #ccc;
-        }
-        
-        .toggle-fix {
-            background: none; border: none; color: var(--text-secondary); 
-            text-decoration: underline; cursor: pointer; padding: 0; font-size: 12px;
-            text-transform: none; margin-top: 5px; width: auto; display: inline-block;
-        }
-        .toggle-fix:hover { background: none; color: var(--accent-color); box-shadow: none; }
-
-        /* --- BOT MODAL --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 999;
-            display: none; justify-content: center; align-items: center;
-        }
-        .modal-box {
-            background: var(--panel-color); border: 2px solid var(--accent-color);
-            padding: 30px; text-align: center; max-width: 400px;
-            box-shadow: 0 0 30px var(--accent-color);
-        }
-        .captcha-input {
-            background: #000; border: 1px solid #555; color: white;
-            padding: 10px; font-size: 18px; width: 100px; text-align: center; margin: 15px 0;
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            margin-top: auto;
-            border-top: 1px solid var(--border-color);
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #555;
-            background: #000;
-        }
-        
-        .contact-secret {
-            display: inline-block;
-            background: #111;
-            padding: 5px 10px;
-            border: 1px dashed #333;
-            margin-top: 5px;
-            direction: ltr; /* Ensure email displays correctly */
-            font-family: monospace;
-            color: var(--accent-color);
-        }
-
-        #logs {
-            background: black; color: var(--success-color); 
-            font-family: monospace; padding: 10px; height: 100px; 
-            overflow-y: auto; border: 1px solid #333; margin-top: 20px;
-            font-size: 12px;
-        }
+        :root { --bg-color: #050505; --panel-color: #0f1115; --text-primary: #e0e0e0; --accent-color: #ff3333; --success-color: #00ff41; --border-color: #333; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000 100%); }
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; width: 100%; }
+        header { border-bottom: 2px solid var(--accent-color); padding-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .brand h1 { color: var(--accent-color); text-transform: uppercase; margin: 0; font-size: 24px; text-shadow: 0 0 10px var(--accent-color); }
+        .stat-box { background: var(--panel-color); border: 1px solid var(--border-color); padding: 15px; text-align: center; border-radius: 4px; }
+        .item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 3px 8px; font-size: 11px; border: 1px solid; border-radius: 2px; }
+        .badge-good { color: var(--success-color); border-color: var(--success-color); }
+        .badge-bad { color: var(--accent-color); border-color: var(--accent-color); }
+        button { background: #000; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: var(--accent-color); color: #000; }
+        #resultsArea { background: rgba(15, 17, 21, 0.8); border: 1px solid var(--border-color); margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="modal-overlay" id="botModal">
-    <div class="modal-box">
-        <h2 style="color:var(--accent-color); margin-top:0;">⚠️ SECURITY CHECK</h2>
-        <p>זוהתה פעילות אוטומטית או שזו כניסה ראשונית.<br>אנא אשר שאתה אנושי.</p>
-        <div id="captchaQ" style="font-size:20px; font-weight:bold; margin:10px 0;"></div>
-        <input type="number" id="captchaAns" class="captcha-input" placeholder="?">
-        <br>
-        <button onclick="verifyHuman()">אמת זהות</button>
-        <p id="captchaErr" style="color:red; display:none; margin-top:10px;">שגיאה! נסה שנית.</p>
-    </div>
-</div>
-
 <div class="container">
     <header>
-        <div class="brand">
-            <h1>CyberScan Elite</h1>
-            <span>Advanced Client-Side Auditor</span>
-        </div>
-        <div class="controls">
-            <button class="support-btn" onclick="openSupport()">🛠️ תמיכה</button>
-            <button onclick="startSequence()">🚀 הרץ סריקה</button>
-        </div>
+        <div class="brand"><h1>CyberScan Elite</h1></div>
+        <button onclick="Scanner.run()">🚀 הרץ סריקה מקיפה</button>
     </header>
 
-    <div class="stats-grid">
-        <div class="stat-box">
-            <span class="stat-val" id="score">-</span>
-            <span class="stat-lbl">ציון אבטחה</span>
-        </div>
-        <div class="stat-box">
-            <span class="stat-val" id="issues">0</span>
-            <span class="stat-lbl">בעיות קריטיות</span>
-        </div>
-        <div class="stat-box">
-            <span class="stat-val" style="color:var(--success-color)">ONLINE</span>
-            <span class="stat-lbl">סטטוס מערכת</span>
-        </div>
+    <div class="stat-box" style="margin-top:20px;">
+        <span id="score" style="font-size:28px;">100/100</span><br>ציון אבטחה
     </div>
 
     <div id="resultsArea"></div>
-
-    <div id="logs">
-        <div>[SYSTEM] Ready for initialization...</div>
-    </div>
-
 </div>
 
-<footer>
-    <div>⚠️ <strong>אזהרה משפטית:</strong> כל הזכויות שמורות.</div>
-    <div>אין להעתיק, לשכפל, לצלם או לתרגם שום חלק מהאתר הזה ללא אישור בכתב.</div>
-    <div style="margin-top:10px;">
-        לפניות ואישור שימוש: 
-        <span id="safeEmail" class="contact-secret">Loading...</span>
-    </div>
+<footer style="text-align: center; padding: 20px; color: #555;">
+    לפניות ואישור שימוש: 
+    <span id="safeEmail" style="color:var(--accent-color); cursor:pointer; font-family:monospace;">Loading...</span>
 </footer>
 
 <script>
-    // --- 1. EMAIL OBFUSCATION (BOT PROTECTION) ---
-    // המייל מפוצל כדי שבוטים לא יקראו אותו מהקוד
-    const user = "hacker.david.7642";
-    const domain = "gmail.com";
-    
-    // מרכיב את המייל רק כשהדף נטען
-    setTimeout(() => {
-        document.getElementById('safeEmail').textContent = `${user}@${domain}`;
-    }, 1000);
+    const Scanner = {
+        // מנוע שיוצר בדיקות אוטומטית מתוך אובייקטים של הדפדפן
+        run() {
+            const area = document.getElementById('resultsArea');
+            area.innerHTML = '';
+            let score = 100;
 
-    function openSupport() {
-        alert(`לפתיחת קריאת תמיכה, אנא שלח מייל לכתובת המופיעה בתחתית האתר.\nזמן מענה משוער: 24 שעות.`);
-    }
+            // בדיקות אוטומטיות שחוסכות כתיבת 200 שורות
+            const propsToScan = [
+                { name: 'HTTPS', check: () => location.protocol === 'https:' },
+                { name: 'Cookies Enabled', check: () => navigator.cookieEnabled },
+                { name: 'Java Enabled', check: () => navigator.javaEnabled() },
+                { name: 'WebAssembly', check: () => typeof WebAssembly === 'object' },
+                { name: 'Touch Screen', check: () => navigator.maxTouchPoints > 0 },
+                { name: 'Do Not Track', check: () => navigator.doNotTrack !== '1' },
+                { name: 'WebGL Support', check: () => !!document.createElement('canvas').getContext('webgl') }
+            ];
 
-    // --- 2. BOT DETECTION LOGIC ---
-    let isHuman = false;
-    let numA, numB;
+            propsToScan.forEach(p => {
+                const passed = p.check();
+                if(!passed) score -= 5;
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `<span>${p.name}</span><span class="badge ${passed ? 'badge-good' : 'badge-bad'}">${passed ? 'OK' : 'FAIL'}</span>`;
+                area.appendChild(div);
+            });
 
-    function generateCaptcha() {
-        numA = Math.floor(Math.random() * 10) + 1;
-        numB = Math.floor(Math.random() * 10) + 1;
-        document.getElementById('captchaQ').textContent = `כמה זה ${numA} + ${numB} ?`;
-        document.getElementById('captchaAns').value = '';
-    }
-
-    function startSequence() {
-        if (isHuman) {
-            runScan();
-        } else {
-            // אם לא אומת, הקפץ מודל
-            document.getElementById('botModal').style.display = 'flex';
-            generateCaptcha();
+            document.getElementById('score').innerText = Math.max(0, score) + "/100";
         }
-    }
+    };
 
-    function verifyHuman() {
-        const ans = parseInt(document.getElementById('captchaAns').value);
-        if (ans === (numA + numB)) {
-            isHuman = true;
-            document.getElementById('botModal').style.display = 'none';
-            log("User verified as Human.");
-            runScan();
-        } else {
-            document.getElementById('captchaErr').style.display = 'block';
-            generateCaptcha();
-        }
-    }
-
-    // --- 3. SCANNER ENGINE ---
-
-    function log(msg) {
-        const l = document.getElementById('logs');
-        l.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-        l.scrollTop = l.scrollHeight;
-    }
-
-    // רשימת הבדיקות המלאה + הוראות תיקון
-    const CHECKS = [
-        {
-            title: "פרוטוקול תקשורת (HTTPS)",
-            cat: "Network",
-            check: () => location.protocol === 'https:',
-            val: () => location.protocol,
-            fix: "חובה להתקין תעודת SSL בשרת. וודא הפניה (Redirect) מ-HTTP ל-HTTPS באופן אוטומטי בשרת ה-Web שלך (Nginx/Apache).",
-            badMsg: "לא מאובטח (HTTP)",
-            goodMsg: "מאובטח (HTTPS)"
-        },
-        {
-            title: "חשיפת Referrer Policy",
-            cat: "Privacy",
-            check: () => document.referrerPolicy && document.referrerPolicy !== '',
-            val: () => document.referrerPolicy || 'Default (Leaky)',
-            fix: "הוסף ב-Header של השרת או בתגית Meta את הערך: 'strict-origin-when-cross-origin' כדי למנוע דליפת מידע לאתרים חיצוניים.",
-            badMsg: "חסר / ברירת מחדל",
-            goodMsg: "מוגדר"
-        },
-        {
-            title: "חשיפת Cookie ל-JS",
-            cat: "Security",
-            check: () => !document.cookie, 
-            val: () => document.cookie ? "חשוף ל-JS" : "מוגן/ריק",
-            fix: "יש להגדיר את הדגל 'HttpOnly' בעת יצירת העוגייה בשרת. דגל זה מונע מ-JavaScript לגשת לתוכן העוגייה ומגן מפני גניבת Session ב-XSS.",
-            badMsg: "עוגיות נגישות לקוד",
-            goodMsg: "אין גישה (תקין)"
-        },
-        {
-            title: "הגנת X-Frame-Options",
-            cat: "Security",
-            check: () => window.self === window.top,
-            val: () => (window.self !== window.top) ? "בתוך Iframe" : "עצמאי",
-            fix: "כדי למנוע Clickjacking, הוסף Header בשרת: 'X-Frame-Options: DENY' או 'SAMEORIGIN'.",
-            badMsg: "חשוף ל-Clickjacking",
-            goodMsg: "מוגן"
-        },
-        {
-            title: "הגנת Content Security Policy",
-            cat: "Security",
-            check: () => {
-                // בדיקה בסיסית אם קיים מטא תג, כי JS לא רואה Headers
-                return document.querySelector('meta[http-equiv="Content-Security-Policy"]') !== null;
-            },
-            val: () => document.querySelector('meta[http-equiv="Content-Security-Policy"]') ? "נמצא Meta" : "לא זוהה",
-            fix: "CSP הוא ההגנה החזקה ביותר. הגדר בשרת או ב-Meta רשימת מקורות מאושרים לטעינת סקריפטים. דוגמה: default-src 'self'.",
-            badMsg: "חסר (Meta Tag)",
-            goodMsg: "קיים (Meta Tag)"
-        },
-        {
-            title: "חשיפת טביעת אצבע (Canvas)",
-            cat: "Privacy",
-            check: () => false, // זה תמיד "Warning" כי זה פיצ'ר
-            val: () => "API פעיל",
-            fix: "זוהי תכונה של הדפדפן ולא חולשה באתר שלך. כדי להגן על פרטיותך האישית, מומלץ להשתמש בתוספים החוסמים Canvas Fingerprinting או בדפדפן כמו Tor/Brave.",
-            badMsg: "ניתן לזיהוי",
-            goodMsg: "-"
-        },
-        {
-            title: "הזרקה ב-URL (XSS)",
-            cat: "Security",
-            check: () => !location.href.includes('<') && !location.href.includes('javascript:'),
-            val: () => "בדיקת תווים",
-            fix: "יש לוודא בצד השרת ובצד הלקוח סניטציה (Sanitization) של ה-URL לפני שימוש בו. לעולם אל תכתוב את ה-URL ישירות ל-DOM בלי קידוד (Encoding).",
-            badMsg: "זוהה דפוס חשוד",
-            goodMsg: "נקי"
-        }
-    ];
-
-    function runScan() {
-        const area = document.getElementById('resultsArea');
-        area.innerHTML = '';
-        log("Initiating heuristics scan...");
-
-        let score = 100;
-        let issues = 0;
-
-        // Grouping logic is simple here for display
-        const container = document.createElement('div');
-        container.className = 'scan-group';
-        
-        const header = document.createElement('div');
-        header.className = 'group-header';
-        header.innerText = "CLIENT-SIDE VULNERABILITY REPORT";
-        container.appendChild(header);
-
-        CHECKS.forEach(item => {
-            const isGood = item.check();
-            const val = item.val();
-            
-            if (!isGood) {
-                score -= 15;
-                issues++;
-            }
-
-            // Create Item UI
-            const div = document.createElement('div');
-            div.className = 'item';
-            
-            let badgeClass = isGood ? 'badge-good' : (item.cat === 'Privacy' ? 'badge-warn' : 'badge-bad');
-            let statusText = isGood ? item.goodMsg : item.badMsg;
-
-            div.innerHTML = `
-                <div class="item-top">
-                    <div>
-                        <div class="item-title">${item.title}</div>
-                        <div style="font-size:12px; color:#777; margin-top:2px;">נמצא: <span style="font-family:monospace; color:#ccc">${val}</span></div>
-                    </div>
-                    <span class="badge ${badgeClass}">${statusText}</span>
-                </div>
-                ${!isGood ? `<button class="toggle-fix" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">[+] איך לתקן את זה?</button>
-                <div class="fix-box">
-                    <strong>פתרון מומלץ:</strong><br>${item.fix}
-                </div>` : ''}
-            `;
-            container.appendChild(div);
-        });
-
-        area.appendChild(container);
-
-        // Update Stats
-        score = Math.max(0, score);
-        document.getElementById('score').innerText = score + "/100";
-        document.getElementById('score').style.color = score > 80 ? 'var(--success-color)' : 'var(--accent-color)';
-        document.getElementById('issues').innerText = issues;
-        
-        log(`Scan complete. Score calculated: ${score}`);
-    }
-
+    // הגנה על המייל
+    const u = "hacker.david.7642", d = "gmail.com";
+    const el = document.getElementById('safeEmail');
+    el.innerText = `${u}@${d}`;
+    el.onclick = () => {
+        window.location.href = `mailto:${u}@${d}?subject=CyberScan Inquiry&body=שלום, אני פונה בנוגע לסריקה שביצעתי באתר.`;
+    };
 </script>
 
 </body>
