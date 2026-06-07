@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <meta name="description" content="ברוכים הבאים לאתר שלי ב-GitHub Pages. כאן תוכלו למצוא מידע, פרויקטים ועדכונים.">
+    <meta name="description" content="ברוכים הבאים לאתר הרשמי שלי ב-GitHub Pages. כאן תוכלו למצוא פרויקטים, מידע ועדכונים שוטפים.">
     
     <title>האתר שלי</title>
     
     <style>
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f9;
@@ -22,18 +22,28 @@
         header {
             background-color: #24292e;
             color: white;
-            padding: 1rem;
+            padding: 1.5rem;
             text-align: center;
         }
-        /* עיצוב עבור תגית ה-main שנוספה */
+        /* תיקון: שימוש בתגית landmark מסוג main למבנה תקין */
         main {
             flex: 1;
             max-width: 800px;
             margin: 2rem auto;
-            padding: 1rem;
+            padding: 2rem;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* תיקון ניגודיות: צבע קישור כהה ובולט (כחול עמוק) וקו תחתון מובנה להדגשה */
+        .accessible-link {
+            color: #0056b3; 
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .accessible-link:hover, .accessible-link:focus {
+            color: #003366;
+            text-decoration: none;
         }
         footer {
             background-color: #24292e;
@@ -51,8 +61,13 @@
     </header>
 
     <main>
-        <h2>האתר פעיל בהצלחה!</h2>
-        <p>אם הגעתם לכאן, זה אומר ששגיאת ה-404 נפתרה, והעמוד נטען בצורה תקינה, מהירה ומאובטחת.</p>
+        <h2>האתר פעיל ומאובטח בהצלחה!</h2>
+        <p>ברכות! שגיאת ה-404 נפתרה, והעמוד נטען כעת בצורה תקינה, נגישה ומהירה לחלוטין.</p>
+        
+        <p>
+            רוצים ללמוד עוד על בניית אתרים? 
+            <a href="https://pages.github.com/" class="accessible-link" aria-label="קרא את התיעוד המלא של גיטהאב פייג'ס">קראו את התיעוד המלא של GitHub Pages</a>.
+        </p>
     </main>
 
     <footer>
